@@ -35,7 +35,13 @@ export function TvDisplay() {
   }, []);
 
   const current = entries[0];
-  const upNext = entries.slice(1);
+  // Cap the visible up-next list at 10 regardless of queue length —
+  // beyond that the rows get unreadable on a TV. We still report the
+  // true total in the header and add a "+N more" hint when clipped.
+  const MAX_UP_NEXT = 10;
+  const totalWaiting = Math.max(0, entries.length - (current ? 1 : 0));
+  const upNext = entries.slice(1, 1 + MAX_UP_NEXT);
+  const overflow = Math.max(0, totalWaiting - upNext.length);
 
   // Time with seconds + uppercase AM/PM (e.g. "07:11:34 PM").
   const h24 = now.getHours();
@@ -157,7 +163,7 @@ export function TvDisplay() {
         <section className="rounded-3xl bg-white/[0.04] border border-white/10 backdrop-blur-xl p-5 lg:p-7 flex flex-col min-h-0 overflow-hidden">
           <div className="shrink-0 flex items-center justify-between mb-4">
             <div className="text-[10px] lg:text-xs uppercase tracking-[0.32em] text-brand-300 font-semibold">Up next</div>
-            <span className="text-xs text-white/60">{upNext.length} waiting</span>
+            <span className="text-xs text-white/60">{totalWaiting} waiting</span>
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2.5">
@@ -195,6 +201,12 @@ export function TvDisplay() {
 
             {upNext.length === 0 && (
               <div className="text-white/50 text-base lg:text-lg text-center py-10">No further patients in queue.</div>
+            )}
+
+            {overflow > 0 && (
+              <div className="pt-1.5 text-center text-xs lg:text-sm font-semibold uppercase tracking-wider text-white/55">
+                + {overflow} more waiting
+              </div>
             )}
           </div>
         </section>
