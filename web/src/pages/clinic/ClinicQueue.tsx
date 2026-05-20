@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, SkipForward, Receipt, FileText, Plus, Clock } from 'lucide-react';
+import { Check, SkipForward, Receipt, FileText, Plus, Clock, Monitor } from 'lucide-react';
 import { Card, CardHeader, CardSubtitle, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -29,7 +29,12 @@ export function ClinicQueue() {
             <CardTitle>Now serving</CardTitle>
             <CardSubtitle>Doctor session live</CardSubtitle>
           </div>
-          <Badge tone="success" pulse>Live · WebSocket</Badge>
+          <div className="flex items-center gap-2">
+            <Badge tone="success" pulse>Live · WebSocket</Badge>
+            <a href="/display/clinic" target="_blank" rel="noreferrer">
+              <Button variant="outline" size="sm" leftIcon={<Monitor size={14} />}>Open TV display</Button>
+            </a>
+          </div>
         </CardHeader>
         {current ? (
           <div className="grid md:grid-cols-3 gap-4">

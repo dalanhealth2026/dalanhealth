@@ -48,6 +48,7 @@ import { PatientProfile } from '@/pages/patient/PatientProfile';
 
 import { BillingScreen } from '@/pages/billing/BillingScreen';
 import { PrescriptionScreen } from '@/pages/prescription/PrescriptionScreen';
+import { TvDisplay } from '@/pages/display/TvDisplay';
 
 export const router = createBrowserRouter([
   {
@@ -64,6 +65,7 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '/demo', element: <DemoSelector /> },
+  { path: '/display/clinic', element: <TvDisplay /> },
 
   {
     path: '/admin',

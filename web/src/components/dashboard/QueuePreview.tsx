@@ -1,0 +1,49 @@
+import { Link } from 'react-router-dom';
+import { Card, CardSubtitle, CardTitle } from '@/components/ui/Card';
+import { SourceBadge } from '@/components/ui/SourceBadge';
+import { Badge } from '@/components/ui/Badge';
+import type { QueueEntry } from '@/store/queue';
+
+interface Props {
+  entries: QueueEntry[];
+  title?: string;
+  viewAllTo?: string;
+  limit?: number;
+}
+
+export function QueuePreview({ entries, title = 'Live queue', viewAllTo = '/clinic/queue', limit = 6 }: Props) {
+  const list = entries.slice(0, limit);
+  return (
+    <Card className="h-full">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardSubtitle>Next {list.length} in line</CardSubtitle>
+        </div>
+        <Link to={viewAllTo} className="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-300 hover:underline">
+          View all
+        </Link>
+      </div>
+      <div className="space-y-1.5">
+        {list.map((e, idx) => (
+          <div key={e.id} className="flex items-center justify-between rounded-xl border hairline p-2.5">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`text-base font-extrabold tracking-tight w-12 text-center ${idx === 0 ? 'text-token' : idx === 1 ? 'text-brand-600 dark:text-brand-300' : 'text-ink-500'}`}>
+                #{e.token}
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-ink-900 dark:text-ink-50 truncate">{e.patientName}</div>
+                <div className="text-[11px] text-muted">{e.joinedAt}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <SourceBadge source={e.source} />
+              {idx === 0 && <Badge tone="success" pulse size="sm">Now</Badge>}
+            </div>
+          </div>
+        ))}
+        {list.length === 0 && <div className="text-sm text-muted text-center py-6">Queue is empty.</div>}
+      </div>
+    </Card>
+  );
+}

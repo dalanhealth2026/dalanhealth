@@ -1,110 +1,72 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Users, Ticket, IndianRupee, Wallet, Plus, FileText, Receipt, BellRing, Clock } from 'lucide-react';
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { StatCard } from '@/components/ui/StatCard';
-import { Card, CardHeader, CardSubtitle, CardTitle } from '@/components/ui/Card';
+import { Users, Ticket, IndianRupee, CheckCircle, Monitor } from 'lucide-react';
+import { StatTile } from '@/components/dashboard/StatTile';
+import { CurrentTokenCard } from '@/components/dashboard/CurrentTokenCard';
+import { WalletMiniCard } from '@/components/dashboard/WalletMiniCard';
+import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import { QueuePreview } from '@/components/dashboard/QueuePreview';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { SourceBadge } from '@/components/ui/SourceBadge';
-import { StatusPill } from '@/components/ui/StatusPill';
-import { demoClinic, demoQueue, demoRevenueSeries } from '@/services/demoData';
+import { useQueue } from '@/store/queue';
+import { useAuth } from '@/store/auth';
+import { demoClinic, demoQueue } from '@/services/demoData';
+import { clinicActivity, clinicSparklines } from '@/services/activityData';
 import { inr } from '@/lib/format';
 
-const actions = [
-  { icon: <Plus size={16} />, label: 'Add patient', to: '/receptionist/add', tone: 'brand' },
-  { icon: <Ticket size={16} />, label: 'Queue', to: '/clinic/queue', tone: 'accent' },
-  { icon: <Receipt size={16} />, label: 'Billing', to: '/clinic/billing', tone: 'success' },
-  { icon: <FileText size={16} />, label: 'Prescription', to: '/clinic/prescription', tone: 'warning' },
-];
-
 export function ClinicDashboard() {
-  const c = demoClinic;
+  const { entries, setEntries, advance, skipCurrent } = useQueue();
+  const userName = useAuth((s) => s.user?.name);
+
+  useEffect(() => {
+    if (entries.length === 0) setEntries(demoQueue);
+  }, [entries.length, setEntries]);
+
+  const current = entries[0];
+  const completedToday = 25;
+  const liveQueue = entries.length;
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Today's patients" value={c.todayPatients} icon={<Users size={16} />} accent="brand" />
-        <StatCard label="Today's revenue" value={inr(c.todayRevenue)} icon={<IndianRupee size={16} />} accent="success" />
-        <StatCard label="Wallet balance" value={inr(c.walletBalance)} icon={<Wallet size={16} />} accent="accent" />
-        <StatCard label="Follow-ups due" value={c.followUps} icon={<BellRing size={16} />} accent="warning" />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div>
-            <CardTitle>Quick actions</CardTitle>
-            <CardSubtitle>One click to common workflows</CardSubtitle>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="text-2xl font-bold tracking-tight text-ink-900 dark:text-ink-50">
+            Good {greeting()}, {(userName ?? 'Doctor')} <span aria-hidden>👋</span>
           </div>
-          <Badge tone="brand">{c.timing}</Badge>
-        </CardHeader>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {actions.map((a) => (
-            <Link key={a.label} to={a.to}>
-              <motion.div whileHover={{ y: -3 }} className="rounded-2xl border hairline bg-white dark:bg-ink-900 p-5 flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                  a.tone === 'brand' ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300' :
-                  a.tone === 'accent' ? 'bg-accent-500/15 text-accent-600 dark:text-accent-300' :
-                  a.tone === 'success' ? 'bg-success-500/15 text-success-600 dark:text-success-500' :
-                  'bg-warning-500/15 text-warning-600 dark:text-warning-500'
-                }`}>{a.icon}</div>
-                <div>
-                  <div className="text-sm font-semibold text-ink-900 dark:text-ink-50">{a.label}</div>
-                  <div className="text-xs text-muted">Open</div>
-                </div>
-              </motion.div>
-            </Link>
-          ))}
+          <div className="text-sm text-muted">Here's what's happening at {demoClinic.name} today.</div>
         </div>
-      </Card>
-
-      <div className="grid lg:grid-cols-3 gap-5">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <div>
-              <CardTitle>Live queue</CardTitle>
-              <CardSubtitle>Next five patients</CardSubtitle>
-            </div>
-            <Link to="/clinic/queue"><Button variant="ghost" size="sm">Open queue →</Button></Link>
-          </CardHeader>
-          <div className="space-y-2">
-            {demoQueue.slice(0, 5).map((q) => (
-              <div key={q.id} className="flex items-center justify-between rounded-xl border hairline bg-white/60 dark:bg-ink-900/60 p-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-brand-500/15 text-brand-700 dark:text-brand-300 flex items-center justify-center font-semibold">#{q.token}</div>
-                  <div>
-                    <div className="text-sm font-medium text-ink-900 dark:text-ink-50">{q.patientName}</div>
-                    <div className="text-[11px] text-muted flex items-center gap-2">
-                      <SourceBadge source={q.source} />
-                      <span className="inline-flex items-center gap-1"><Clock size={11} /> {q.joinedAt}</span>
-                    </div>
-                  </div>
-                </div>
-                <StatusPill status={q.status} />
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div>
-              <CardTitle>Revenue (6mo)</CardTitle>
-              <CardSubtitle>Trend</CardSubtitle>
-            </div>
-          </CardHeader>
-          <div className="h-56">
-            <ResponsiveContainer>
-              <LineChart data={demoRevenueSeries.map((d) => ({ m: d.m, v: Math.round(d.revenue / 200) }))}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                <XAxis dataKey="m" stroke="currentColor" opacity={0.6} fontSize={10} />
-                <YAxis stroke="currentColor" opacity={0.6} fontSize={10} />
-                <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.95)', border: 'none', borderRadius: 12, color: 'white', fontSize: 12 }} formatter={(v: number) => inr(v)} />
-                <Line type="monotone" dataKey="v" stroke="rgb(139,92,246)" strokeWidth={2.5} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+        <div className="flex items-center gap-2">
+          <Badge tone="brand">{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}</Badge>
+          <a href="/display/clinic" target="_blank" rel="noreferrer">
+            <Button variant="outline" leftIcon={<Monitor size={14} />}>TV display</Button>
+          </a>
+        </div>
       </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatTile label="Patients today" value={demoClinic.todayPatients} hint="18 new · 14 old" icon={<Users size={14} />} accent="brand" sparkline={clinicSparklines.patients} />
+        <StatTile label="Live queue" value={liveQueue} hint={`${liveQueue} tokens in line`} icon={<Ticket size={14} />} accent="accent" sparkline={clinicSparklines.queue} />
+        <StatTile label="Completed" value={completedToday} hint="Successful visits" icon={<CheckCircle size={14} />} accent="success" sparkline={clinicSparklines.completed} />
+        <StatTile label="Earnings today" value={inr(demoClinic.todayRevenue)} hint="Revenue generated" icon={<IndianRupee size={14} />} accent="warning" sparkline={clinicSparklines.earnings} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <QueuePreview entries={entries} viewAllTo="/clinic/queue" limit={5} />
+        <CurrentTokenCard current={current} onComplete={advance} onSkip={skipCurrent} />
+        <WalletMiniCard balance={demoClinic.walletBalance} perVisitRate={12} to="/clinic/wallet" />
+        <ActivityFeed items={clinicActivity} />
+      </div>
+
+      <Link to="/clinic/queue" className="block">
+        <Button size="xl" fullWidth>Call next patient</Button>
+      </Link>
     </div>
   );
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'morning';
+  if (h < 17) return 'afternoon';
+  return 'evening';
 }

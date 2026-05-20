@@ -1,21 +1,31 @@
 import { motion } from 'framer-motion';
 import { Building2, IndianRupee, Wallet, Bell, Users, AlertCircle, TrendingUp, Activity } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { StatCard } from '@/components/ui/StatCard';
+import { StatTile } from '@/components/dashboard/StatTile';
+import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { Card, CardSubtitle, CardTitle, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { demoClinics, demoRevenueSeries, demoQueueTrend, demoSuperAdmin } from '@/services/demoData';
+import { adminActivity, adminSparklines } from '@/services/activityData';
 import { inr, inrCompact, num } from '@/lib/format';
 
 export function AdminDashboard() {
   const d = demoSuperAdmin;
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="text-2xl font-bold tracking-tight text-ink-900 dark:text-ink-50">Operations dashboard</div>
+          <div className="text-sm text-muted">Realtime view of every clinic on DalanHealth</div>
+        </div>
+        <Badge tone="success" pulse>All systems operational</Badge>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total clinics" value={num(d.totalClinics)} delta={{ value: '+8 this month', positive: true }} icon={<Building2 size={16} />} accent="brand" />
-        <StatCard label="Today's revenue" value={inr(d.todayRevenue)} delta={{ value: '+12% vs yesterday', positive: true }} icon={<IndianRupee size={16} />} accent="success" />
-        <StatCard label="MTD revenue" value={inrCompact(d.monthlyRevenue)} delta={{ value: '+18% MoM', positive: true }} icon={<TrendingUp size={16} />} accent="accent" />
-        <StatCard label="Wallet recharge MTD" value={inrCompact(d.walletRechargeMtd)} icon={<Wallet size={16} />} accent="teal" />
+        <StatTile label="Total clinics" value={num(d.totalClinics)} hint="+8 this month" icon={<Building2 size={14} />} accent="brand" sparkline={adminSparklines.clinics} />
+        <StatTile label="Today's revenue" value={inr(d.todayRevenue)} hint="+12% vs yesterday" icon={<IndianRupee size={14} />} accent="success" sparkline={adminSparklines.revenue} />
+        <StatTile label="Wallet recharge MTD" value={inrCompact(d.walletRechargeMtd)} icon={<Wallet size={14} />} accent="accent" sparkline={adminSparklines.recharge} />
+        <StatTile label="Notifications sent" value={`${num(d.notificationsSent / 1000)}K`} hint="MTD" icon={<Bell size={14} />} accent="warning" sparkline={adminSparklines.notifications} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5">
@@ -30,12 +40,6 @@ export function AdminDashboard() {
           <div className="h-72">
             <ResponsiveContainer>
               <LineChart data={demoRevenueSeries}>
-                <defs>
-                  <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgb(47,127,255)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="rgb(47,127,255)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                 <XAxis dataKey="m" stroke="currentColor" opacity={0.6} fontSize={11} />
                 <YAxis stroke="currentColor" opacity={0.6} fontSize={11} tickFormatter={(v) => inrCompact(v)} />
@@ -50,6 +54,10 @@ export function AdminDashboard() {
           </div>
         </Card>
 
+        <ActivityFeed title="Recent activity" subtitle="Across all clinics" items={adminActivity} />
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-5">
         <Card>
           <CardHeader>
             <div>
@@ -58,23 +66,21 @@ export function AdminDashboard() {
             </div>
             <Activity size={14} className="text-muted" />
           </CardHeader>
-          <div className="h-72">
+          <div className="h-64">
             <ResponsiveContainer>
               <BarChart data={demoQueueTrend}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                 <XAxis dataKey="d" stroke="currentColor" opacity={0.6} fontSize={11} />
                 <YAxis stroke="currentColor" opacity={0.6} fontSize={11} />
                 <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.95)', border: 'none', borderRadius: 12, color: 'white', fontSize: 12 }} />
-                <Bar dataKey="online" stackId="a" fill="rgb(47,127,255)" radius={[0,0,0,0]} />
-                <Bar dataKey="offline" stackId="a" fill="rgb(16,185,129)" radius={[0,0,0,0]} />
-                <Bar dataKey="qr" stackId="a" fill="rgb(139,92,246)" radius={[6,6,0,0]} />
+                <Bar dataKey="online" stackId="a" fill="rgb(47,127,255)" />
+                <Bar dataKey="offline" stackId="a" fill="rgb(16,185,129)" />
+                <Bar dataKey="qr" stackId="a" fill="rgb(139,92,246)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
-      </div>
 
-      <div className="grid lg:grid-cols-3 gap-5">
         <Card className="lg:col-span-2">
           <CardHeader>
             <div>
@@ -111,12 +117,13 @@ export function AdminDashboard() {
             </table>
           </div>
         </Card>
+      </div>
 
-        <div className="space-y-4">
-          <StatCard label="Patients (total)" value={num(d.patientCount)} icon={<Users size={16} />} accent="brand" />
-          <StatCard label="Notifications sent" value={`${num(d.notificationsSent / 1000)}K`} icon={<Bell size={16} />} accent="accent" />
-          <StatCard label="Pending issues" value={d.pendingIssues} icon={<AlertCircle size={16} />} accent="warning" />
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatTile label="Patients (total)" value={num(d.patientCount)} icon={<Users size={14} />} accent="brand" />
+        <StatTile label="Active clinics" value={d.activeClinics} icon={<Building2 size={14} />} accent="success" />
+        <StatTile label="MTD revenue" value={inrCompact(d.monthlyRevenue)} icon={<TrendingUp size={14} />} accent="accent" />
+        <StatTile label="Pending issues" value={d.pendingIssues} icon={<AlertCircle size={14} />} accent="warning" />
       </div>
     </div>
   );
