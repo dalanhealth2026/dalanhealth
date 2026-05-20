@@ -254,29 +254,30 @@ export function TvDisplay() {
               <div className="text-ink-500 dark:text-white/50 text-base lg:text-lg text-center py-10">No further patients in queue.</div>
             )}
           </div>
+
+          {/* Panel footer — overflow count + total queue size, pinned at the
+              bottom of the Up Next card (not the page footer) */}
+          <div className="shrink-0 mt-3 pt-3 border-t border-ink-200 dark:border-white/10 text-center space-y-1">
+            {overflow > 0 && (
+              <div className="text-xs lg:text-sm font-bold uppercase tracking-wider text-ink-700 dark:text-white/75">
+                + {overflow} more waiting
+              </div>
+            )}
+            <div className="text-[11px] lg:text-xs text-ink-500 dark:text-white/55">
+              {entries.length} patient{entries.length === 1 ? '' : 's'} in today's queue
+            </div>
+          </div>
         </section>
       </main>
 
-      {/* Footer — left: +N more waiting · centre: contact · right: queue size */}
+      {/* Page footer — single centred line with copyright + contact */}
       <footer className="relative z-10 shrink-0 border-t border-ink-200 dark:border-white/10 bg-white/70 dark:bg-black/30 backdrop-blur">
-        <div className="px-6 sm:px-10 lg:px-14 py-3 grid grid-cols-3 items-center text-[11px] lg:text-xs text-ink-600 dark:text-white/60 gap-4">
-          <span className="truncate font-semibold uppercase tracking-wider">
-            {overflow > 0 ? (
-              <span className="text-ink-700 dark:text-white/75">+ {overflow} more waiting</span>
-            ) : (
-              <span className="text-ink-400 dark:text-white/40">All waiting patients visible</span>
-            )}
-          </span>
-          <span className="hidden md:flex items-center justify-center gap-2 lg:gap-3 truncate">
-            <span>© {year} Dalansoft Technologies</span>
-            <span aria-hidden className="text-ink-300 dark:text-white/30">·</span>
-            <a href="https://dalansoft.com" target="_blank" rel="noreferrer" className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors">dalansoft.com</a>
-            <span aria-hidden className="text-ink-300 dark:text-white/30">·</span>
-            <a href="mailto:info@dalansoft.com" className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors">info@dalansoft.com</a>
-          </span>
-          <span className="text-right truncate">
-            {entries.length} patient{entries.length === 1 ? '' : 's'} in today's queue
-          </span>
+        <div className="px-6 sm:px-10 lg:px-14 py-3 flex items-center justify-center flex-wrap gap-x-3 gap-y-1 text-[11px] lg:text-xs text-ink-600 dark:text-white/60">
+          <span>© {year} Dalansoft Technologies</span>
+          <span aria-hidden className="text-ink-300 dark:text-white/30">·</span>
+          <a href="https://dalansoft.com" target="_blank" rel="noreferrer" className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors">dalansoft.com</a>
+          <span aria-hidden className="text-ink-300 dark:text-white/30">·</span>
+          <a href="mailto:info@dalansoft.com" className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors">info@dalansoft.com</a>
         </div>
       </footer>
     </div>
