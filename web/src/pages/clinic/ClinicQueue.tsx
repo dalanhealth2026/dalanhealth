@@ -96,7 +96,6 @@ export function ClinicQueue() {
                 <th className="px-5 py-3">Patient</th>
                 <th className="px-5 py-3">Mobile</th>
                 <th className="px-5 py-3">Source</th>
-                <th className="px-5 py-3">Joined</th>
                 <th className="px-5 py-3">Status</th>
               </tr>
             </thead>
@@ -116,7 +115,6 @@ export function ClinicQueue() {
                     <td className="px-5 py-3.5 font-medium text-ink-900 dark:text-ink-50">{q.patientName}</td>
                     <td className="px-5 py-3.5 text-muted">{q.patientMobile}</td>
                     <td className="px-5 py-3.5"><SourceBadge source={q.source} /></td>
-                    <td className="px-5 py-3.5 text-muted">{q.joinedAt}</td>
                     <td className="px-5 py-3.5"><StatusPill status={q.status} /></td>
                   </motion.tr>
                 ))}

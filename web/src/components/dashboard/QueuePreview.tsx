@@ -33,7 +33,7 @@ export function QueuePreview({ entries, title = 'Live queue', viewAllTo = '/clin
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-medium text-ink-900 dark:text-ink-50 truncate">{e.patientName}</div>
-                <div className="text-[11px] text-muted">{e.joinedAt}</div>
+                <div className="text-[11px] text-muted truncate">{e.patientMobile}</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
