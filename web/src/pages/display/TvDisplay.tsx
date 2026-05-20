@@ -66,31 +66,36 @@ export function TvDisplay() {
       <div aria-hidden className="pointer-events-none absolute -bottom-40 -right-40 h-[640px] w-[640px] rounded-full bg-brand-500/15 dark:bg-brand-500/20 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute inset-0 grid-bg opacity-10" />
 
-      {/* Header — clinic info stacked, time + theme toggle on the right */}
-      <header className="relative z-10 shrink-0 px-6 sm:px-10 lg:px-14 py-4 lg:py-5 flex items-start justify-between gap-6 border-b border-ink-200 dark:border-white/10">
-        <div className="flex items-start gap-4 min-w-0">
+      {/* Header — 3 sections: clinic name (left), doctor info (centre), time + toggle (right) */}
+      <header className="relative z-10 shrink-0 px-6 sm:px-10 lg:px-14 py-4 lg:py-5 grid grid-cols-3 items-center gap-4 lg:gap-6 border-b border-ink-200 dark:border-white/10">
+        {/* LEFT — heart + clinic name */}
+        <div className="flex items-center gap-3 lg:gap-4 min-w-0">
           <HeartLeafMark size={52} />
-          <div className="min-w-0">
-            <div className="text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight font-brand truncate">
-              {demoClinic.name}
-            </div>
-            <div className="mt-1 text-sm lg:text-base xl:text-lg font-semibold text-token">
-              {demoClinic.doctor}
-            </div>
-            <div className="mt-1 text-xs lg:text-sm text-ink-600 dark:text-white/60 truncate">
-              {demoClinic.specialization}
-            </div>
-            <div className="text-xs lg:text-sm text-ink-500 dark:text-white/55 truncate">
-              {demoClinic.city}
-            </div>
+          <div className="text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight font-brand truncate">
+            {demoClinic.name}
           </div>
         </div>
-        <div className="shrink-0 flex items-start gap-3 lg:gap-5">
-          <div className="flex flex-col items-end">
+
+        {/* CENTRE — doctor / specialist / address, centred between clinic and time */}
+        <div className="text-center min-w-0">
+          <div className="text-base lg:text-lg xl:text-2xl font-bold text-token truncate">
+            {demoClinic.doctor}
+          </div>
+          <div className="mt-0.5 text-xs lg:text-sm text-ink-600 dark:text-white/70 truncate">
+            {demoClinic.specialization}
+          </div>
+          <div className="text-xs lg:text-sm text-ink-500 dark:text-white/55 truncate">
+            {demoClinic.city}
+          </div>
+        </div>
+
+        {/* RIGHT — time + date + theme toggle */}
+        <div className="flex items-start justify-end gap-3 lg:gap-5 min-w-0">
+          <div className="flex flex-col items-end min-w-0">
             <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tabular-nums leading-none font-brand whitespace-nowrap">
               {time}
             </div>
-            <div className="mt-1 text-xs lg:text-sm text-ink-600 dark:text-white/60">{date}</div>
+            <div className="mt-1 text-xs lg:text-sm text-ink-600 dark:text-white/60 whitespace-nowrap">{date}</div>
           </div>
           <ThemeToggle />
         </div>
