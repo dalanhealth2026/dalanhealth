@@ -142,7 +142,7 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
             const open = expanded[section.title] ?? true;
             return (
               <div key={section.title}>
-                {!isCollapsed && (
+                {!isCollapsed ? (
                   <button
                     onClick={() => setExpanded((e) => ({ ...e, [section.title]: !open }))}
                     className="w-full flex items-center justify-between px-3 mb-1.5"
@@ -152,6 +152,13 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
                     </span>
                     <ChevronDown size={12} className={cn('text-white/40 transition-transform', !open && '-rotate-90')} />
                   </button>
+                ) : (
+                  <div className="mb-1 flex flex-col items-center gap-1">
+                    <div className="h-px w-7 bg-white/10" />
+                    <span className={cn('text-[10px] font-extrabold uppercase tracking-[0.18em] leading-none', accentClass[section.accent ?? 'brand'])}>
+                      {section.title.charAt(0)}
+                    </span>
+                  </div>
                 )}
                 <AnimatePresence initial={false}>
                   {(isCollapsed || open) && (
@@ -171,8 +178,10 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
                             onClick={() => setMobileOpen(false)}
                             className={({ isActive }) =>
                               cn(
-                                'group relative flex items-center rounded-xl text-sm font-medium transition-all',
-                                isCollapsed ? 'h-11 w-11 justify-center mx-auto' : 'gap-3 px-3 py-2.5',
+                                'group relative rounded-xl text-sm font-medium transition-all',
+                                isCollapsed
+                                  ? 'flex flex-col items-center justify-center gap-1 h-14 w-14 mx-auto'
+                                  : 'flex items-center gap-3 px-3 py-2.5',
                                 isActive
                                   ? 'bg-gradient-to-r from-brand-500/90 via-brand-500/80 to-brand-400/70 text-white shadow-glowBright'
                                   : 'text-white/65 hover:text-white hover:bg-white/[0.05]',
@@ -182,12 +191,18 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
                             {({ isActive }) => (
                               <>
                                 {isCollapsed ? (
-                                  <span className={cn(
-                                    'font-brand text-base font-bold uppercase tracking-tight leading-none transition-colors',
-                                    isActive ? 'text-white' : 'text-white/75 group-hover:text-white',
-                                  )}>
-                                    {n.label.trim().charAt(0)}
-                                  </span>
+                                  <>
+                                    <span className={cn(
+                                      'inline-flex h-5 w-5 items-center justify-center transition-colors',
+                                      isActive ? 'text-white' : 'text-white/75 group-hover:text-white',
+                                    )}>{n.icon}</span>
+                                    <span className={cn(
+                                      'font-brand text-[10px] font-bold uppercase tracking-wide leading-none transition-colors',
+                                      isActive ? 'text-white' : 'text-white/70 group-hover:text-white',
+                                    )}>
+                                      {n.label.trim().charAt(0)}
+                                    </span>
+                                  </>
                                 ) : (
                                   <>
                                     <span className={cn(
