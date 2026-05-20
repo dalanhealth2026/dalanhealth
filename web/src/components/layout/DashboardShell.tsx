@@ -1,6 +1,6 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, LogOut, Search, Bell } from 'lucide-react';
+import { ChevronDown, LogOut, Search, Bell, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Logo } from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -14,18 +14,45 @@ export interface NavItem {
   label: string;
   icon: ReactNode;
   end?: boolean;
+  badge?: string | number;
+}
+
+export interface NavSection {
+  /** Uppercase section heading shown above its items. */
+  title: string;
+  items: NavItem[];
+  /** Optional accent for the section heading. Defaults to brand. */
+  accent?: 'brand' | 'token' | 'accent' | 'warning';
 }
 
 interface Props {
-  nav: NavItem[];
+  /** Either a flat list of items or grouped sections. */
+  nav: NavItem[] | NavSection[];
   children: ReactNode;
   title?: string;
   subtitle?: string;
   topRight?: ReactNode;
 }
 
+const isSectioned = (n: NavItem[] | NavSection[]): n is NavSection[] =>
+  Array.isArray(n) && n.length > 0 && (n[0] as NavSection).items !== undefined;
+
+const accentClass: Record<NonNullable<NavSection['accent']>, string> = {
+  brand: 'text-brand-300',
+  token: 'text-token',
+  accent: 'text-accent-300',
+  warning: 'text-warning-500',
+};
+
 export function DashboardShell({ nav, children, title, subtitle, topRight }: Props) {
-  const [collapsed, setCollapsed] = useState(false);
+  const sections: NavSection[] = isSectioned(nav)
+    ? nav
+    : [{ title: 'Menu', items: nav as NavItem[] }];
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(
+    Object.fromEntries(sections.map((s) => [s.title, true])),
+  );
   const { user, isDemo, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -34,57 +61,170 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
     navigate('/');
   };
 
-  return (
-    <div className="min-h-screen flex bg-mesh-light dark:bg-mesh-dark">
-      <aside className={cn('hidden md:flex sticky top-0 h-screen flex-col border-r hairline bg-white/60 dark:bg-ink-950/60 backdrop-blur-xl transition-all duration-300', collapsed ? 'w-[72px]' : 'w-[244px]')}>
-        <div className={cn('h-16 flex items-center border-b hairline', collapsed ? 'justify-center px-2' : 'px-5')}>
-          {collapsed ? <Logo size="sm" /> : <Logo />}
-        </div>
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {nav.map((n) => (
-            <NavLink
-              key={n.to}
-              to={n.to}
-              end={n.end}
-              className={({ isActive }) =>
-                cn(
-                  'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
-                  isActive
-                    ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300 ring-1 ring-brand-500/20'
-                    : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100/70 dark:hover:bg-ink-800/60',
-                )
-              }
-            >
-              <span className="inline-flex h-5 w-5 items-center justify-center">{n.icon}</span>
+  const setAllExpanded = (v: boolean) =>
+    setExpanded(Object.fromEntries(sections.map((s) => [s.title, v])));
+
+  useEffect(() => {
+    const onResize = () => window.innerWidth >= 768 && setMobileOpen(false);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const sidebar = (
+    <div className="flex h-full flex-col bg-navy-900 text-white">
+      {/* Header */}
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+        <Logo asLink={false} variant="onDark" />
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/70 hover:bg-white/10"
+          aria-label="Close menu"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* Expand / Collapse all */}
+      <div className="px-4 grid grid-cols-2 gap-2">
+        <button
+          onClick={() => setAllExpanded(true)}
+          className="rounded-lg border border-white/10 bg-white/[0.04] py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/70 hover:bg-white/[0.08] hover:text-white transition-colors"
+        >
+          Expand all
+        </button>
+        <button
+          onClick={() => setAllExpanded(false)}
+          className="rounded-lg border border-white/10 bg-white/[0.04] py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/70 hover:bg-white/[0.08] hover:text-white transition-colors"
+        >
+          Collapse all
+        </button>
+      </div>
+
+      {/* Sections */}
+      <nav className="flex-1 overflow-y-auto px-3 pt-4 pb-3 space-y-4">
+        {sections.map((section) => {
+          const open = expanded[section.title] ?? true;
+          return (
+            <div key={section.title}>
+              <button
+                onClick={() => setExpanded((e) => ({ ...e, [section.title]: !open }))}
+                className="w-full flex items-center justify-between px-3 mb-1.5"
+              >
+                <span className={cn('text-[10px] font-bold uppercase tracking-[0.18em]', accentClass[section.accent ?? 'brand'])}>
+                  {section.title}
+                </span>
+                <ChevronDown size={12} className={cn('text-white/40 transition-transform', !open && '-rotate-90')} />
+              </button>
               <AnimatePresence initial={false}>
-                {!collapsed && (
-                  <motion.span
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -6 }}
-                    transition={{ duration: 0.15 }}
-                    className="truncate"
+                {open && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    className="overflow-hidden space-y-1"
                   >
-                    {n.label}
-                  </motion.span>
+                    {section.items.map((n) => (
+                      <NavLink
+                        key={n.to}
+                        to={n.to}
+                        end={n.end}
+                        onClick={() => setMobileOpen(false)}
+                        className={({ isActive }) =>
+                          cn(
+                            'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
+                            isActive
+                              ? 'bg-gradient-to-r from-brand-500/90 via-brand-500/80 to-brand-400/70 text-white shadow-glowBright'
+                              : 'text-white/65 hover:text-white hover:bg-white/[0.05]',
+                          )
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            <span className={cn(
+                              'inline-flex h-5 w-5 items-center justify-center transition-colors',
+                              isActive ? 'text-white' : 'text-white/55 group-hover:text-white',
+                            )}>{n.icon}</span>
+                            <span className="truncate flex-1">{n.label}</span>
+                            {n.badge !== undefined && (
+                              <span className={cn(
+                                'rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
+                                isActive ? 'bg-white/25 text-white' : 'bg-brand-500/25 text-brand-200',
+                              )}>{n.badge}</span>
+                            )}
+                          </>
+                        )}
+                      </NavLink>
+                    ))}
+                  </motion.div>
                 )}
               </AnimatePresence>
-            </NavLink>
-          ))}
-        </nav>
-        <div className="border-t hairline p-3">
-          <button
-            onClick={() => setCollapsed((v) => !v)}
-            className="w-full flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-medium text-muted hover:text-ink-900 dark:hover:text-ink-50 hover:bg-ink-100 dark:hover:bg-ink-800"
-          >
-            {collapsed ? <ChevronRight size={14} /> : <><ChevronLeft size={14} /> Collapse</>}
-          </button>
-        </div>
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* User + logout */}
+      <div className="border-t border-white/10 p-3 space-y-2">
+        {user && (
+          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+            <Avatar name={user.name} size="sm" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-semibold text-white truncate">{user.name}</div>
+              <div className="text-[10px] uppercase tracking-wider text-white/50">{user.role.replace('_', ' ')}</div>
+            </div>
+          </div>
+        )}
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-danger-500 hover:bg-danger-500/10 transition-colors"
+        >
+          <LogOut size={16} /> Logout
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen flex bg-ink-50 dark:bg-ink-950">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex sticky top-0 h-screen w-[244px] flex-col">
+        {sidebar}
       </aside>
 
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden fixed inset-0 z-50 flex"
+          >
+            <motion.div
+              initial={{ x: -260 }}
+              animate={{ x: 0 }}
+              exit={{ x: -260 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className="w-[260px] h-full"
+            >
+              {sidebar}
+            </motion.div>
+            <button className="flex-1 bg-ink-950/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-30 border-b hairline bg-white/60 dark:bg-ink-950/60 backdrop-blur-xl">
-          <div className="h-16 px-5 sm:px-8 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-30 border-b hairline bg-white/70 dark:bg-ink-950/70 backdrop-blur-xl">
+          <div className="h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border hairline"
+              aria-label="Open menu"
+            >
+              <Menu size={18} />
+            </button>
             <div className="min-w-0 flex-1">
               {title && <h1 className="text-base sm:text-lg font-semibold tracking-tight text-ink-900 dark:text-ink-50 truncate">{title}</h1>}
               {subtitle && <p className="text-xs text-muted truncate">{subtitle}</p>}
@@ -109,9 +249,6 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
                   <div className="text-[10px] uppercase tracking-wider text-muted">{user?.role?.replace('_', ' ') ?? 'guest'}</div>
                 </div>
               </div>
-              <button onClick={onLogout} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border hairline hover:text-danger-500" title="Sign out">
-                <LogOut size={16} />
-              </button>
             </div>
           </div>
         </header>

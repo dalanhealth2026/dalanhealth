@@ -45,15 +45,34 @@ const config: Config = {
           900: '#0f172a',
           950: '#020617',
         },
+        // Deep navy palette for admin shells — matches reference
+        navy: {
+          400: '#1c2a52',
+          500: '#152141',
+          600: '#0f1a35',
+          700: '#0b1530',
+          800: '#080f25',
+          900: '#050a1c',
+          950: '#020615',
+        },
+        // Vivid green used for token numerals in the live queue
+        token: {
+          400: '#34d399',
+          500: '#10b981',
+          DEFAULT: '#22c55e',
+          bright: '#4ade80',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'SF Pro Display', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'SF Pro Display', 'system-ui', 'sans-serif'],
+        display: ['Poppins', 'Inter', 'SF Pro Display', 'system-ui', 'sans-serif'],
+        brand: ['Poppins', 'Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         soft: '0 2px 10px -2px rgba(15, 23, 42, 0.06), 0 4px 24px -4px rgba(15, 23, 42, 0.05)',
         glow: '0 0 0 1px rgba(47, 127, 255, 0.15), 0 10px 40px -10px rgba(47, 127, 255, 0.35)',
         glowAccent: '0 0 0 1px rgba(139, 92, 246, 0.15), 0 10px 40px -10px rgba(139, 92, 246, 0.4)',
+        glowBright: '0 0 0 1px rgba(91, 163, 255, 0.35), 0 8px 24px -4px rgba(91, 163, 255, 0.55), inset 0 1px 0 rgba(255,255,255,0.18)',
         card: '0 1px 0 rgba(15, 23, 42, 0.04), 0 8px 32px -12px rgba(15, 23, 42, 0.1)',
         cardDark: '0 1px 0 rgba(255,255,255,0.04), 0 12px 40px -16px rgba(0,0,0,0.6)',
       },

@@ -1,24 +1,42 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Ticket, Calendar, Receipt, FileText, BarChart3,
-  Wallet, UserCog, QrCode, Bell, Settings,
+  Wallet, UserCog, QrCode, Bell, Settings, CreditCard,
 } from 'lucide-react';
-import { DashboardShell, type NavItem } from '@/components/layout/DashboardShell';
+import { DashboardShell, type NavSection } from '@/components/layout/DashboardShell';
 import { useAuth } from '@/store/auth';
 
-const nav: NavItem[] = [
-  { to: '/clinic', label: 'Dashboard', icon: <LayoutDashboard size={16} />, end: true },
-  { to: '/clinic/queue', label: 'Queue', icon: <Ticket size={16} /> },
-  { to: '/clinic/patients', label: 'Patients', icon: <Users size={16} /> },
-  { to: '/clinic/appointments', label: 'Appointments', icon: <Calendar size={16} /> },
-  { to: '/clinic/billing', label: 'Billing', icon: <Receipt size={16} /> },
-  { to: '/clinic/prescription', label: 'Prescription', icon: <FileText size={16} /> },
-  { to: '/clinic/reports', label: 'Reports', icon: <BarChart3 size={16} /> },
-  { to: '/clinic/wallet', label: 'Wallet', icon: <Wallet size={16} /> },
-  { to: '/clinic/staff', label: 'Staff', icon: <UserCog size={16} /> },
-  { to: '/clinic/qr', label: 'QR', icon: <QrCode size={16} /> },
-  { to: '/clinic/notifications', label: 'Notifications', icon: <Bell size={16} /> },
-  { to: '/clinic/settings', label: 'Settings', icon: <Settings size={16} /> },
+const nav: NavSection[] = [
+  {
+    title: 'Main',
+    accent: 'brand',
+    items: [
+      { to: '/clinic', label: 'Dashboard', icon: <LayoutDashboard size={16} />, end: true },
+      { to: '/clinic/queue', label: 'Queue & Tokens', icon: <Ticket size={16} />, badge: 6 },
+      { to: '/clinic/patients', label: 'Patients', icon: <Users size={16} /> },
+      { to: '/clinic/appointments', label: 'Appointments', icon: <Calendar size={16} /> },
+      { to: '/clinic/prescription', label: 'Prescriptions', icon: <FileText size={16} /> },
+      { to: '/clinic/reports', label: 'Reports & Analytics', icon: <BarChart3 size={16} /> },
+    ],
+  },
+  {
+    title: 'Billing',
+    accent: 'token',
+    items: [
+      { to: '/clinic/billing', label: 'Wallet & Billing', icon: <Receipt size={16} /> },
+      { to: '/clinic/wallet', label: 'Transactions', icon: <CreditCard size={16} /> },
+    ],
+  },
+  {
+    title: 'Clinic',
+    accent: 'accent',
+    items: [
+      { to: '/clinic/staff', label: 'Staff', icon: <UserCog size={16} /> },
+      { to: '/clinic/qr', label: 'QR Posters', icon: <QrCode size={16} /> },
+      { to: '/clinic/notifications', label: 'Notifications', icon: <Bell size={16} /> },
+      { to: '/clinic/settings', label: 'Settings', icon: <Settings size={16} /> },
+    ],
+  },
 ];
 
 const titles: Record<string, { title: string; sub: string }> = {

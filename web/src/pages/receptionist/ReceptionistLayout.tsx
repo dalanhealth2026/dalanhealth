@@ -1,13 +1,25 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { LayoutDashboard, UserPlus, Ticket, Receipt, FileText } from 'lucide-react';
-import { DashboardShell, type NavItem } from '@/components/layout/DashboardShell';
+import { DashboardShell, type NavSection } from '@/components/layout/DashboardShell';
 
-const nav: NavItem[] = [
-  { to: '/receptionist', label: 'Dashboard', icon: <LayoutDashboard size={16} />, end: true },
-  { to: '/receptionist/add', label: 'Add patient', icon: <UserPlus size={16} /> },
-  { to: '/receptionist/queue', label: 'Queue', icon: <Ticket size={16} /> },
-  { to: '/receptionist/billing', label: 'Billing', icon: <Receipt size={16} /> },
-  { to: '/receptionist/prescription', label: 'Prescription', icon: <FileText size={16} /> },
+const nav: NavSection[] = [
+  {
+    title: 'Main',
+    accent: 'brand',
+    items: [
+      { to: '/receptionist', label: 'Dashboard', icon: <LayoutDashboard size={16} />, end: true },
+      { to: '/receptionist/queue', label: 'Queue & Tokens', icon: <Ticket size={16} />, badge: 6 },
+    ],
+  },
+  {
+    title: 'Patients',
+    accent: 'token',
+    items: [
+      { to: '/receptionist/add', label: 'Add patient', icon: <UserPlus size={16} /> },
+      { to: '/receptionist/billing', label: 'Billing', icon: <Receipt size={16} /> },
+      { to: '/receptionist/prescription', label: 'Prescription', icon: <FileText size={16} /> },
+    ],
+  },
 ];
 
 const titles: Record<string, { title: string; sub: string }> = {

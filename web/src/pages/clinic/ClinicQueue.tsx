@@ -33,9 +33,10 @@ export function ClinicQueue() {
         </CardHeader>
         {current ? (
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 rounded-2xl bg-gradient-to-br from-brand-500/10 via-transparent to-accent-500/10 p-6 border hairline">
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-brand-500 to-accent-500 text-white flex items-center justify-center text-2xl font-bold shadow-glow">
+            <div className="md:col-span-2 rounded-2xl bg-gradient-to-br from-brand-500/10 via-transparent to-token/10 p-6 border hairline relative overflow-hidden">
+              <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-token/15 blur-3xl" />
+              <div className="relative flex items-center gap-5">
+                <div className="text-5xl sm:text-6xl font-extrabold leading-none tracking-tight text-token drop-shadow-[0_0_24px_rgba(34,197,94,0.45)]">
                   #{current.token}
                 </div>
                 <div>

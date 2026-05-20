@@ -130,10 +130,10 @@ export function AddPatient() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="mx-auto mt-6 inline-flex flex-col items-center rounded-3xl bg-gradient-to-br from-brand-500 to-accent-500 text-white px-10 py-6 shadow-glow"
+                className="mx-auto mt-6 inline-flex flex-col items-center rounded-3xl border hairline bg-white dark:bg-navy-900 px-10 py-6 shadow-card"
               >
-                <div className="text-[11px] uppercase tracking-wider opacity-90">Your token</div>
-                <div className="text-5xl font-bold">#{generatedToken}</div>
+                <div className="text-[11px] uppercase tracking-wider text-muted">Your token</div>
+                <div className="text-6xl font-extrabold tracking-tight text-token drop-shadow-[0_0_24px_rgba(34,197,94,0.5)]">#{generatedToken}</div>
               </motion.div>
               <div className="mt-6 flex justify-center gap-2">
                 <Button variant="outline" onClick={() => { setStep('lookup'); setMobile(''); setName(''); setAge(''); setGeneratedToken(null); }}>Add another</Button>

@@ -3,21 +3,39 @@ import {
   LayoutDashboard, Building2, IndianRupee, Wallet, Layers, Gift, Bell,
   Headset, UserCog, BarChart3, Activity, Settings,
 } from 'lucide-react';
-import { DashboardShell, type NavItem } from '@/components/layout/DashboardShell';
+import { DashboardShell, type NavSection } from '@/components/layout/DashboardShell';
 
-const nav: NavItem[] = [
-  { to: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={16} />, end: true },
-  { to: '/admin/clinics', label: 'Clinics', icon: <Building2 size={16} /> },
-  { to: '/admin/revenue', label: 'Revenue', icon: <IndianRupee size={16} /> },
-  { to: '/admin/wallet', label: 'Wallet', icon: <Wallet size={16} /> },
-  { to: '/admin/plans', label: 'Plans', icon: <Layers size={16} /> },
-  { to: '/admin/cashback', label: 'Cashback', icon: <Gift size={16} /> },
-  { to: '/admin/notifications', label: 'Notifications', icon: <Bell size={16} /> },
-  { to: '/admin/support', label: 'Support', icon: <Headset size={16} /> },
-  { to: '/admin/team', label: 'Company admins', icon: <UserCog size={16} /> },
-  { to: '/admin/reports', label: 'Reports', icon: <BarChart3 size={16} /> },
-  { to: '/admin/system', label: 'System health', icon: <Activity size={16} /> },
-  { to: '/admin/settings', label: 'Settings', icon: <Settings size={16} /> },
+const nav: NavSection[] = [
+  {
+    title: 'Main',
+    accent: 'brand',
+    items: [
+      { to: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={16} />, end: true },
+      { to: '/admin/clinics', label: 'Clinics', icon: <Building2 size={16} />, badge: 124 },
+      { to: '/admin/reports', label: 'Reports & Analytics', icon: <BarChart3 size={16} /> },
+    ],
+  },
+  {
+    title: 'Finance',
+    accent: 'token',
+    items: [
+      { to: '/admin/revenue', label: 'Revenue', icon: <IndianRupee size={16} /> },
+      { to: '/admin/wallet', label: 'Wallet & recharge', icon: <Wallet size={16} /> },
+      { to: '/admin/plans', label: 'Plans & pricing', icon: <Layers size={16} /> },
+      { to: '/admin/cashback', label: 'Cashback', icon: <Gift size={16} /> },
+    ],
+  },
+  {
+    title: 'Operations',
+    accent: 'accent',
+    items: [
+      { to: '/admin/notifications', label: 'Notifications', icon: <Bell size={16} /> },
+      { to: '/admin/support', label: 'Support', icon: <Headset size={16} />, badge: 4 },
+      { to: '/admin/team', label: 'Company admins', icon: <UserCog size={16} /> },
+      { to: '/admin/system', label: 'System health', icon: <Activity size={16} /> },
+      { to: '/admin/settings', label: 'Settings', icon: <Settings size={16} /> },
+    ],
+  },
 ];
 
 const titles: Record<string, { title: string; sub: string }> = {
