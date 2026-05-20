@@ -12,20 +12,27 @@ import { AdminLayout } from '@/pages/admin/AdminLayout';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminClinics } from '@/pages/admin/AdminClinics';
 import { AdminRevenue } from '@/pages/admin/AdminRevenue';
-import {
-  AdminWallet, AdminPlans, AdminCashback, AdminNotifications,
-  AdminSupport, AdminTeam, AdminReports, AdminSystem, AdminSettings,
-} from '@/pages/admin/AdminPlaceholders';
+import { AdminWallet } from '@/pages/admin/AdminWallet';
+import { AdminPlans } from '@/pages/admin/AdminPlans';
+import { AdminCashback } from '@/pages/admin/AdminCashback';
+import { AdminNotifications } from '@/pages/admin/AdminNotifications';
+import { AdminSupport } from '@/pages/admin/AdminSupport';
+import { AdminTeam } from '@/pages/admin/AdminTeam';
+import { AdminReports } from '@/pages/admin/AdminReports';
+import { AdminSystem } from '@/pages/admin/AdminSystem';
+import { AdminSettings } from '@/pages/admin/AdminSettings';
 
 import { ClinicLayout } from '@/pages/clinic/ClinicLayout';
 import { ClinicDashboard } from '@/pages/clinic/ClinicDashboard';
 import { ClinicQueue } from '@/pages/clinic/ClinicQueue';
 import { ClinicWallet } from '@/pages/clinic/ClinicWallet';
 import { ClinicQR } from '@/pages/clinic/ClinicQR';
-import {
-  ClinicPatients, ClinicAppointments, ClinicReports,
-  ClinicStaff, ClinicNotifications, ClinicSettings,
-} from '@/pages/clinic/ClinicPlaceholders';
+import { ClinicPatients } from '@/pages/clinic/ClinicPatients';
+import { ClinicAppointments } from '@/pages/clinic/ClinicAppointments';
+import { ClinicReports } from '@/pages/clinic/ClinicReports';
+import { ClinicStaff } from '@/pages/clinic/ClinicStaff';
+import { ClinicNotifications } from '@/pages/clinic/ClinicNotifications';
+import { ClinicSettings } from '@/pages/clinic/ClinicSettings';
 
 import { ReceptionistLayout } from '@/pages/receptionist/ReceptionistLayout';
 import { ReceptionistDashboard } from '@/pages/receptionist/ReceptionistDashboard';
