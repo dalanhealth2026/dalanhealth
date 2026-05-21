@@ -32,8 +32,16 @@ export function AuthLayout() {
       </main>
 
       <footer className="relative z-10">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-6 text-center text-xs text-muted">
-          © {new Date().getFullYear()} Dalansoft Technologies Pvt Ltd
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
+          <div className="whitespace-nowrap">
+            Powered by{' '}
+            <span className="font-bold text-ink-800 dark:text-ink-100">Dalan Health</span>
+          </div>
+          <div className="text-center">© {new Date().getFullYear()} Dalansoft Technologies Pvt Ltd</div>
+          <div className="whitespace-nowrap">
+            A Product of{' '}
+            <span className="font-bold text-ink-800 dark:text-ink-100">Dalansoft Technologies</span>
+          </div>
         </div>
       </footer>
     </div>

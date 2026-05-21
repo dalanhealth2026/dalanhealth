@@ -34,7 +34,7 @@ export default function Login() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.flex}>
       <View style={s.container}>
         <View style={s.logoBlock}>
-          <View style={s.logoBox}><Text style={s.logoMark}>+</Text></View>
+          <View style={s.logoBox}><Text style={s.logoMark}>D</Text></View>
           <Text style={s.brand}>DalanHealth</Text>
         </View>
         <Text style={s.h1}>Sign in</Text>

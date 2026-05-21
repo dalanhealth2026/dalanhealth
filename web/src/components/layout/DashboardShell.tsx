@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronsDownUp, ChevronsUpDown, LogOut, Search, Bell, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Logo, HeartLeafMark } from '@/components/ui/Logo';
+import { Logo, DalanMark } from '@/components/ui/Logo';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
@@ -95,15 +95,15 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
     const isMobile = mode === 'mobile';
     const isCollapsed = !isMobile && collapsed; // mobile drawer always shows full content
     return (
-      <div className={cn('flex h-full flex-col bg-navy-900 text-white transition-[width] duration-300', isCollapsed ? 'w-[72px]' : 'w-full')}>
+      <div className={cn('flex h-full flex-col bg-white dark:bg-navy-900 text-ink-900 dark:text-white border-r border-ink-200 dark:border-transparent transition-[width] duration-300', isCollapsed ? 'w-[72px]' : 'w-full')}>
         {/* Header: company name + hamburger toggle */}
         <div className={cn('flex items-center pt-5 pb-3', isCollapsed ? 'px-3 flex-col gap-3' : 'px-5 justify-between')}>
           {isCollapsed ? (
             <>
-              <HeartLeafMark size={32} />
+              <DalanMark size={32} />
               <button
                 onClick={toggleCollapse}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-700 dark:text-white/80 hover:bg-ink-100 dark:hover:bg-white/10"
                 aria-label="Expand sidebar"
               >
                 <Menu size={16} />
@@ -111,10 +111,10 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
             </>
           ) : (
             <>
-              <Logo asLink={false} variant="onDark" />
+              <Logo asLink={false} variant="auto" />
               <button
                 onClick={isMobile ? () => setMobileOpen(false) : toggleCollapse}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-600 dark:text-white/70 hover:text-ink-900 dark:hover:text-white hover:bg-ink-100 dark:hover:bg-white/10 transition-colors"
                 aria-label={isMobile ? 'Close menu' : 'Collapse sidebar'}
               >
                 {isMobile ? <X size={16} /> : <Menu size={16} />}
@@ -128,7 +128,7 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
           <div className="px-4">
             <button
               onClick={toggleAllSections}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/70 hover:bg-white/[0.08] hover:text-white transition-colors"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-ink-200 dark:border-white/10 bg-ink-50 dark:bg-white/[0.04] py-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-600 dark:text-white/70 hover:bg-ink-100 dark:hover:bg-white/[0.08] hover:text-ink-900 dark:hover:text-white transition-colors"
             >
               {allOpen ? <ChevronsDownUp size={12} /> : <ChevronsUpDown size={12} />}
               {allOpen ? 'Collapse all' : 'Expand all'}
@@ -150,7 +150,7 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
                     <span className={cn('text-[10px] font-bold uppercase tracking-[0.18em]', accentClass[section.accent ?? 'brand'])}>
                       {section.title}
                     </span>
-                    <ChevronDown size={12} className={cn('text-white/40 transition-transform', !open && '-rotate-90')} />
+                    <ChevronDown size={12} className={cn('text-ink-400 dark:text-white/40 transition-transform', !open && '-rotate-90')} />
                   </button>
                 ) : (
                   <Tooltip label={`Open ${section.title}`} side="bottom">
@@ -161,7 +161,7 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
                         setExpanded((e) => ({ ...e, [section.title]: true }));
                       }}
                       className={cn(
-                        'group flex items-center justify-center h-14 w-14 mx-auto rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.10] hover:border-white/20 transition-all',
+                        'group flex items-center justify-center h-14 w-14 mx-auto rounded-2xl border border-ink-200 dark:border-white/10 bg-ink-50 dark:bg-white/[0.04] hover:bg-ink-100 dark:hover:bg-white/[0.10] hover:border-ink-300 dark:hover:border-white/20 transition-all',
                       )}
                       aria-label={`Open ${section.title} section`}
                     >
@@ -198,7 +198,7 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
                                   : 'flex items-center gap-3 px-3 py-2.5',
                                 isActive
                                   ? 'bg-gradient-to-r from-brand-500/90 via-brand-500/80 to-brand-400/70 text-white shadow-glowBright'
-                                  : 'text-white/65 hover:text-white hover:bg-white/[0.05]',
+                                  : 'text-ink-700 dark:text-white/65 hover:text-ink-900 dark:hover:text-white hover:bg-ink-100 dark:hover:bg-white/[0.05]',
                               )
                             }
                           >
@@ -208,11 +208,11 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
                                   <>
                                     <span className={cn(
                                       'inline-flex h-5 w-5 items-center justify-center transition-colors',
-                                      isActive ? 'text-white' : 'text-white/75 group-hover:text-white',
+                                      isActive ? 'text-white' : 'text-ink-600 dark:text-white/75 group-hover:text-ink-900 dark:group-hover:text-white',
                                     )}>{n.icon}</span>
                                     <span className={cn(
                                       'font-brand text-[10px] font-bold uppercase tracking-wide leading-none transition-colors',
-                                      isActive ? 'text-white' : 'text-white/70 group-hover:text-white',
+                                      isActive ? 'text-white' : 'text-ink-600 dark:text-white/70 group-hover:text-ink-900 dark:group-hover:text-white',
                                     )}>
                                       {n.label.trim().charAt(0)}
                                     </span>
@@ -221,13 +221,13 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
                                   <>
                                     <span className={cn(
                                       'inline-flex h-5 w-5 items-center justify-center transition-colors shrink-0',
-                                      isActive ? 'text-white' : 'text-white/60 group-hover:text-white',
+                                      isActive ? 'text-white' : 'text-ink-500 dark:text-white/60 group-hover:text-ink-900 dark:group-hover:text-white',
                                     )}>{n.icon}</span>
                                     <span className="truncate flex-1">{n.label}</span>
                                     {n.badge !== undefined && (
                                       <span className={cn(
                                         'rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
-                                        isActive ? 'bg-white/25 text-white' : 'bg-brand-500/25 text-brand-200',
+                                        isActive ? 'bg-white/25 text-white' : 'bg-brand-500/15 text-brand-700 dark:bg-brand-500/25 dark:text-brand-200',
                                       )}>{n.badge}</span>
                                     )}
                                   </>
@@ -256,13 +256,13 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
         </nav>
 
         {/* User + logout */}
-        <div className={cn('border-t border-white/10 space-y-2', isCollapsed ? 'p-2' : 'p-3')}>
+        <div className={cn('border-t border-ink-200 dark:border-white/10 space-y-2', isCollapsed ? 'p-2' : 'p-3')}>
           {!isCollapsed && user && (
             <div className="flex items-center gap-3 rounded-xl px-2 py-2">
               <Avatar name={user.name} size="sm" />
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-semibold text-white truncate">{user.name}</div>
-                <div className="text-[10px] uppercase tracking-wider text-white/50">{user.role.replace('_', ' ')}</div>
+                <div className="text-xs font-semibold text-ink-900 dark:text-white truncate">{user.name}</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-500 dark:text-white/50">{user.role.replace('_', ' ')}</div>
               </div>
             </div>
           )}

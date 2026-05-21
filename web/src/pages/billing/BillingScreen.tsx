@@ -110,8 +110,15 @@ export function BillingScreen() {
             </div>
           )}
 
-          <div className="mt-8 pt-6 border-t hairline text-center text-[11px] text-muted">
-            Powered by DalanHealth · A product of Dalansoft Technologies Pvt Ltd
+          <div className="mt-8 pt-6 border-t hairline flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
+            <div className="whitespace-nowrap">
+              Powered by{' '}
+              <span className="font-bold text-ink-800 dark:text-ink-100">Dalan Health</span>
+            </div>
+            <div className="whitespace-nowrap">
+              A Product of{' '}
+              <span className="font-bold text-ink-800 dark:text-ink-100">Dalansoft Technologies</span>
+            </div>
           </div>
 
           <div className="no-print mt-6 flex flex-wrap gap-2 justify-end">

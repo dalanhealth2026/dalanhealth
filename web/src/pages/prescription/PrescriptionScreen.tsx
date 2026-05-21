@@ -132,8 +132,17 @@ export function PrescriptionScreen() {
             </div>
           )}
 
-          <div className="mt-10 pt-5 border-t hairline flex items-end justify-between">
-            <div className="text-[11px] text-muted">Powered by DalanHealth · Dalansoft Technologies Pvt Ltd</div>
+          <div className="mt-10 pt-5 border-t hairline flex items-end justify-between gap-4">
+            <div className="text-[11px] text-muted space-y-0.5">
+              <div className="whitespace-nowrap">
+                Powered by{' '}
+                <span className="font-bold text-ink-800 dark:text-ink-100">Dalan Health</span>
+              </div>
+              <div className="whitespace-nowrap">
+                A Product of{' '}
+                <span className="font-bold text-ink-800 dark:text-ink-100">Dalansoft Technologies</span>
+              </div>
+            </div>
             <div className="text-right">
               <div className="border-b border-ink-300 dark:border-ink-700 w-40 mb-1" />
               <div className="text-xs text-muted">Doctor signature</div>

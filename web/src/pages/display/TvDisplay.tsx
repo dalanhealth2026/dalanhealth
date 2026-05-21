@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HeartLeafMark } from '@/components/ui/Logo';
+import { DalanMark } from '@/components/ui/Logo';
 import { SourceBadge } from '@/components/ui/SourceBadge';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useQueue } from '@/store/queue';
@@ -9,13 +9,10 @@ import { demoQueue, demoClinic } from '@/services/demoData';
 /**
  * TV / kiosk display for the clinic waiting room.
  *
- * - Locked to viewport (h-screen + overflow-hidden) so it never scrolls.
- * - Theme-aware: respects the user's light/dark choice via the toggle
- *   in the top-right corner.
- * - Up-next list is capped at 5 with derived status labels:
- *     position 0 -> GET READY
- *     position 1 -> QUEUE
- *     positions 2-4 -> WAITING
+ * Layout:
+ *   - Mobile / tablet: header → token panel → up-next list → footer (stacked)
+ *   - Laptop / TV:     header → [token panel | up-next list] → footer (2-col)
+ * Locked to viewport on every device (no scroll); up-next list auto-fits rows.
  */
 export function TvDisplay() {
   const { entries, setEntries } = useQueue();
@@ -32,20 +29,20 @@ export function TvDisplay() {
 
   const current = entries[0];
 
-  // Dynamic row count — show as many up-next patients as the available
-  // height can fit. On a phone we land around 5; on a 4K wall TV we can
-  // comfortably show 25–30. Recomputed on every container resize.
+  // Auto-fit row count for the up-next list.
   const listRef = useRef<HTMLDivElement>(null);
+  const firstRowRef = useRef<HTMLDivElement>(null);
   const [visibleCount, setVisibleCount] = useState(8);
 
   useLayoutEffect(() => {
     const compute = () => {
       if (!listRef.current) return;
       const h = listRef.current.clientHeight;
+      const measured = firstRowRef.current?.offsetHeight ?? 0;
       const w = window.innerWidth;
-      // Approximate rendered row height (incl. padding) per Tailwind breakpoint.
-      const rowH = w >= 1280 ? 88 : w >= 1024 ? 76 : w >= 640 ? 64 : 56;
-      const gap = 10; // space-y-2.5 = 0.625rem = 10px
+      const estimated = w >= 1280 ? 64 : w >= 1024 ? 58 : 48;
+      const rowH = measured || estimated;
+      const gap = 8;
       const fits = Math.max(1, Math.floor((h + gap) / (rowH + gap)));
       setVisibleCount(fits);
     };
@@ -54,6 +51,7 @@ export function TvDisplay() {
       ? new ResizeObserver(() => compute())
       : null;
     if (ro && listRef.current) ro.observe(listRef.current);
+    if (ro && firstRowRef.current) ro.observe(firstRowRef.current);
     window.addEventListener('resize', compute);
     return () => {
       if (ro) ro.disconnect();
@@ -62,8 +60,12 @@ export function TvDisplay() {
   }, []);
 
   const totalWaiting = Math.max(0, entries.length - (current ? 1 : 0));
-  const upNext = entries.slice(1, 1 + visibleCount);
-  const overflow = Math.max(0, totalWaiting - upNext.length);
+  // Render ALL waiting patients in the up-next list; the list scrolls
+  // internally if more exist than the visible window can hold.
+  const upNext = entries.slice(1);
+  // visibleCount is still computed (above) so we know how many fit without
+  // scrolling — used to flag the overflow indicator in the panel footer.
+  const overflow = Math.max(0, upNext.length - visibleCount);
 
   // Clock — manual format so seconds + uppercase AM/PM stay consistent.
   const h24 = now.getHours();
@@ -77,7 +79,6 @@ export function TvDisplay() {
 
   const timingBlocks = demoClinic.timing.split(',').map((t) => t.trim()).filter(Boolean);
 
-  // Derive a position-based status label for the up-next list.
   const statusFor = (idx: number) => {
     if (idx === 0) return { label: 'Get ready', tone: 'text-brand-600 dark:text-brand-300' };
     if (idx === 1) return { label: 'Queue', tone: 'text-token' };
@@ -85,56 +86,71 @@ export function TvDisplay() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-ink-50 dark:bg-navy-950 text-ink-900 dark:text-white relative flex flex-col">
+    <div
+      style={{ height: '100dvh', display: 'grid', gridTemplateRows: 'auto 1fr auto' }}
+      className="w-full overflow-hidden bg-ink-50 dark:bg-navy-950 text-ink-900 dark:text-white relative"
+    >
       {/* Decorative backdrop */}
       <div aria-hidden className="pointer-events-none absolute -top-40 -left-40 h-[640px] w-[640px] rounded-full bg-token/15 dark:bg-token/20 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -bottom-40 -right-40 h-[640px] w-[640px] rounded-full bg-brand-500/15 dark:bg-brand-500/20 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute inset-0 grid-bg opacity-10" />
 
-      {/* Header — 3 sections: clinic name (left), doctor info (centre), time + toggle (right) */}
-      <header className="relative z-10 shrink-0 px-6 sm:px-10 lg:px-14 py-4 lg:py-5 grid grid-cols-3 items-center gap-4 lg:gap-6 border-b border-ink-200 dark:border-white/10">
-        {/* LEFT — heart + clinic name + address */}
-        <div className="flex items-center gap-3 lg:gap-4 min-w-0">
-          <HeartLeafMark size={52} />
-          <div className="min-w-0">
-            <div className="text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight font-brand truncate">
+      {/* Header — 3 sections on lg+ (clinic | time | doctor + toggle).
+          On mobile: clinic + doctor + toggle on row 1, time centred row 2. */}
+      <header className="relative z-10 px-4 sm:px-6 md:px-10 lg:px-14 py-3 sm:py-4 lg:py-5 grid grid-cols-[1fr_auto] lg:grid-cols-3 lg:items-center gap-x-3 gap-y-2 sm:gap-y-3 lg:gap-6 border-b border-ink-200 dark:border-white/10">
+        {/* LEFT — logo + clinic name + city. No truncation: names always wrap
+            in full so nothing is hidden behind "…". `title` gives a hover/long-
+            press tooltip on every device. */}
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
+          <DalanMark size={44} />
+          <div className="min-w-0 flex-1">
+            <div
+              title={demoClinic.name}
+              className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight font-brand leading-tight break-words"
+            >
               {demoClinic.name}
             </div>
-            <div className="mt-0.5 text-xs lg:text-sm text-ink-500 dark:text-white/55 truncate">
+            <div
+              title={demoClinic.city}
+              className="mt-0.5 text-[11px] sm:text-xs lg:text-sm text-ink-500 dark:text-white/55 break-words"
+            >
               {demoClinic.city}
             </div>
           </div>
         </div>
 
-        {/* CENTRE — doctor name + specialist, centred between clinic and time */}
-        <div className="text-center min-w-0">
-          <div className="text-base lg:text-lg xl:text-2xl font-bold text-token truncate">
-            {demoClinic.doctor}
-          </div>
-          <div className="mt-0.5 text-xs lg:text-sm text-ink-600 dark:text-white/70 truncate">
-            {demoClinic.specialization}
-          </div>
-        </div>
-
-        {/* RIGHT — product caption + time + date + theme toggle */}
-        <div className="flex items-start justify-end gap-3 lg:gap-5 min-w-0">
-          <div className="flex flex-col items-end min-w-0">
-            <div className="text-[10px] lg:text-xs uppercase tracking-[0.18em] text-ink-500 dark:text-white/55 whitespace-nowrap">
-              A product of <span className="font-brand font-semibold tracking-[0.22em] text-ink-700 dark:text-white/80">Dalansoft Technologies</span>
+        {/* RIGHT (mobile order 2) — doctor + theme toggle */}
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0 lg:order-3 lg:justify-end">
+          <div className="text-right min-w-0">
+            <div
+              title={demoClinic.doctor}
+              className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-token leading-tight break-words"
+            >
+              {demoClinic.doctor}
             </div>
-            <div className="mt-1 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tabular-nums leading-none font-brand whitespace-nowrap">
-              {time}
+            <div
+              title={demoClinic.specialization}
+              className="mt-0.5 text-[11px] sm:text-xs lg:text-sm text-ink-600 dark:text-white/70 break-words"
+            >
+              {demoClinic.specialization}
             </div>
-            <div className="mt-1 text-xs lg:text-sm text-ink-600 dark:text-white/60 whitespace-nowrap">{date}</div>
           </div>
           <ThemeToggle />
         </div>
+
+        {/* CENTRE (mobile order 3, spans both cols) — time + date */}
+        <div className="col-span-2 lg:col-span-1 lg:order-2 text-center min-w-0">
+          <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tabular-nums leading-none font-brand whitespace-nowrap">{time}</div>
+          <div className="mt-1 text-[11px] sm:text-xs lg:text-sm text-ink-600 dark:text-white/60 whitespace-nowrap">{date}</div>
+        </div>
       </header>
 
-      {/* Main */}
-      <main className="relative z-10 flex-1 min-h-0 px-6 sm:px-10 lg:px-14 py-6 lg:py-8 grid lg:grid-cols-[1.5fr_1fr] gap-6 lg:gap-8 overflow-hidden">
-        {/* LEFT: Now serving + Doctor sitting */}
-        <section className="rounded-3xl bg-white dark:bg-white/[0.04] border border-ink-200 dark:border-white/10 backdrop-blur-xl p-6 lg:p-8 flex flex-col relative overflow-hidden min-h-0 shadow-card dark:shadow-none">
+      {/* Main — Mobile: stack [token-panel | up-next] vertically with token sized
+                  to content and up-next filling remaining.
+                  Laptop: 2-col grid 1.5fr / 1fr. */}
+      <main className="relative z-10 min-h-0 px-4 sm:px-6 md:px-10 lg:px-14 py-3 sm:py-4 md:py-6 lg:py-8 grid grid-rows-2 lg:grid-rows-1 lg:grid-cols-[1.5fr_1fr] gap-3 sm:gap-4 md:gap-6 lg:gap-8 overflow-hidden">
+        {/* TOKEN PANEL: Now serving + Doctor sitting */}
+        <section className="rounded-2xl sm:rounded-3xl bg-white dark:bg-white/[0.04] border border-ink-200 dark:border-white/10 backdrop-blur-xl p-3 sm:p-5 lg:p-8 flex flex-col relative overflow-hidden min-h-0 shadow-card dark:shadow-none">
           <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-br from-token/8 via-transparent to-brand-500/8 dark:from-token/10 dark:to-brand-500/10" />
 
           <div className="flex items-center justify-center gap-2 text-[10px] lg:text-xs uppercase tracking-[0.32em] text-token font-semibold">
@@ -157,36 +173,31 @@ export function TvDisplay() {
                   className="flex flex-col items-center"
                 >
                   <div
-                    className="font-extrabold leading-none tracking-tight text-token drop-shadow-[0_0_60px_rgba(34,197,94,0.45)] font-brand"
-                    style={{ fontSize: 'clamp(6rem, 22vh, 16rem)' }}
+                    className="font-extrabold leading-none tracking-tight text-token lg:drop-shadow-[0_0_60px_rgba(34,197,94,0.45)] font-brand"
+                    style={{ fontSize: 'clamp(2.25rem, 7vh, 14rem)' }}
                   >
                     #{current.token}
                   </div>
-                  <div className="mt-4 lg:mt-6 flex flex-wrap items-center justify-center gap-3 lg:gap-4">
-                    <div className="text-2xl lg:text-4xl xl:text-5xl font-bold">{current.patientName}</div>
+                  <div className="mt-2 sm:mt-3 lg:mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-3 lg:gap-4">
+                    <div className="text-xl sm:text-2xl lg:text-4xl xl:text-5xl font-bold">{current.patientName}</div>
                     <SourceBadge source={current.source} />
                   </div>
-                  <div className="mt-4 lg:mt-5 inline-flex items-center gap-2 rounded-full bg-token/15 px-4 lg:px-5 py-1.5 lg:py-2 text-token font-semibold uppercase tracking-wider text-xs lg:text-sm">
+                  <div className="mt-2 sm:mt-3 lg:mt-5 inline-flex items-center gap-2 rounded-full bg-token/15 px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-token font-semibold uppercase tracking-wider text-[10px] sm:text-xs lg:text-sm text-center">
                     Please proceed to the consultation room
                   </div>
                 </motion.div>
               ) : (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-ink-500 dark:text-white/40 text-2xl lg:text-3xl"
-                >
+                <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-ink-500 dark:text-white/40 text-2xl lg:text-3xl">
                   Waiting for the next patient…
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Doctor sitting — beneath the "Please proceed" pill. Pairs split L/R. */}
-          <div className="mt-4 lg:mt-6 rounded-2xl border border-ink-200 dark:border-white/10 bg-white dark:bg-white/[0.04] px-5 lg:px-8 py-3 lg:py-4 shrink-0">
+          {/* Doctor sitting */}
+          <div className="mt-2 sm:mt-3 lg:mt-6 rounded-xl sm:rounded-2xl border border-ink-200 dark:border-white/10 bg-white dark:bg-white/[0.04] px-3 sm:px-5 lg:px-8 py-2 sm:py-3 lg:py-4 shrink-0">
             <div className="text-[10px] lg:text-xs uppercase tracking-wider text-ink-500 dark:text-white/60 text-center">Doctor sitting</div>
-            <div className="mt-1.5 grid grid-cols-2 gap-x-6 lg:gap-x-10 gap-y-1.5 items-center">
+            <div className="mt-1.5 grid grid-cols-2 gap-x-3 sm:gap-x-6 lg:gap-x-10 gap-y-1.5 items-center">
               {timingBlocks.map((t, i) => {
                 const isLastOdd = i === timingBlocks.length - 1 && timingBlocks.length % 2 === 1;
                 const align = isLastOdd
@@ -195,10 +206,7 @@ export function TvDisplay() {
                   ? 'text-left'
                   : 'text-right';
                 return (
-                  <div
-                    key={i}
-                    className={`text-lg lg:text-2xl font-bold tracking-tight whitespace-nowrap ${align}`}
-                  >
+                  <div key={i} className={`text-base sm:text-lg lg:text-2xl font-bold tracking-tight whitespace-nowrap ${align}`}>
                     {t}
                   </div>
                 );
@@ -207,14 +215,18 @@ export function TvDisplay() {
           </div>
         </section>
 
-        {/* RIGHT: Up next — 5 max with status labels */}
-        <section className="rounded-3xl bg-white dark:bg-white/[0.04] border border-ink-200 dark:border-white/10 backdrop-blur-xl p-5 lg:p-7 flex flex-col min-h-0 overflow-hidden shadow-card dark:shadow-none">
-          <div className="shrink-0 flex items-center justify-between mb-4">
+        {/* UP NEXT — auto-fit rows */}
+        <section className="rounded-2xl sm:rounded-3xl bg-white dark:bg-white/[0.04] border border-ink-200 dark:border-white/10 backdrop-blur-xl p-3 sm:p-5 lg:p-7 flex flex-col min-h-0 overflow-hidden shadow-card dark:shadow-none">
+          <div className="shrink-0 flex items-center justify-between mb-3 sm:mb-4">
             <div className="text-[10px] lg:text-xs uppercase tracking-[0.32em] text-brand-600 dark:text-brand-300 font-semibold">Up next</div>
             <span className="text-xs text-ink-500 dark:text-white/60">{totalWaiting} waiting</span>
           </div>
 
-          <div ref={listRef} className="flex-1 min-h-0 overflow-hidden space-y-2.5">
+          <div
+            ref={listRef}
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehavior: 'contain' }}
+            className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1"
+          >
             <AnimatePresence initial={false}>
               {upNext.map((e, idx) => {
                 const s = statusFor(idx);
@@ -222,24 +234,25 @@ export function TvDisplay() {
                 return (
                   <motion.div
                     key={e.id}
+                    ref={idx === 0 ? firstRowRef : undefined}
                     layout
                     initial={{ opacity: 0, x: 16 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -16 }}
                     transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-                    className={`flex items-center gap-4 rounded-2xl border p-3 lg:p-4 ${
+                    className={`flex items-center gap-3 lg:gap-4 rounded-2xl border px-3 lg:px-4 py-2.5 lg:py-3 ${
                       isLead
                         ? 'border-brand-500/40 bg-brand-500/10 dark:bg-brand-500/15'
                         : 'border-ink-200 dark:border-white/10 bg-ink-50 dark:bg-white/[0.02]'
                     }`}
                   >
-                    <div className={`w-16 lg:w-20 text-center text-3xl lg:text-4xl xl:text-5xl font-extrabold tabular-nums leading-none font-brand ${
+                    <div className={`w-14 lg:w-16 xl:w-20 text-center text-2xl lg:text-3xl xl:text-4xl font-extrabold tabular-nums leading-none font-brand ${
                       isLead ? 'text-brand-600 dark:text-brand-300' : 'text-ink-500 dark:text-white/70'
                     }`}>
                       #{e.token}
                     </div>
                     <div className="flex-1 min-w-0 flex items-center gap-2 lg:gap-3">
-                      <div className="text-base lg:text-lg xl:text-xl font-semibold truncate min-w-0">{e.patientName}</div>
+                      <div className="text-base lg:text-lg font-semibold truncate min-w-0">{e.patientName}</div>
                       <SourceBadge source={e.source} />
                     </div>
                     <div className={`text-[10px] lg:text-xs uppercase tracking-wider font-bold shrink-0 ${s.tone}`}>
@@ -255,29 +268,50 @@ export function TvDisplay() {
             )}
           </div>
 
-          {/* Panel footer — overflow count + total queue size, pinned at the
-              bottom of the Up Next card (not the page footer) */}
-          <div className="shrink-0 mt-3 pt-3 border-t border-ink-200 dark:border-white/10 text-center space-y-1">
-            {overflow > 0 && (
-              <div className="text-xs lg:text-sm font-bold uppercase tracking-wider text-ink-700 dark:text-white/75">
-                + {overflow} more waiting
-              </div>
-            )}
-            <div className="text-[11px] lg:text-xs text-ink-500 dark:text-white/55">
-              {entries.length} patient{entries.length === 1 ? '' : 's'} in today's queue
+          <div className="shrink-0 mt-3 pt-3 border-t border-ink-200 dark:border-white/10 flex items-center justify-between gap-3">
+            <div className="text-xs lg:text-sm font-bold uppercase tracking-wider text-ink-700 dark:text-white/75">
+              {overflow > 0 ? `+ ${overflow} more waiting` : ''}
+            </div>
+            <div className="text-[11px] lg:text-xs text-ink-500 dark:text-white/55 whitespace-nowrap">
+              <span className="font-bold text-ink-700 dark:text-white/75">
+                Total — {entries.length} patient{entries.length === 1 ? '' : 's'}
+              </span>{' '}
+              in today's queue
             </div>
           </div>
         </section>
       </main>
 
-      {/* Page footer — single centred line with copyright + contact */}
-      <footer className="relative z-10 shrink-0 border-t border-ink-200 dark:border-white/10 bg-white/70 dark:bg-black/30 backdrop-blur">
-        <div className="px-6 sm:px-10 lg:px-14 py-3 flex items-center justify-center flex-wrap gap-x-3 gap-y-1 text-[11px] lg:text-xs text-ink-600 dark:text-white/60">
-          <span>© {year} Dalansoft Technologies</span>
-          <span aria-hidden className="text-ink-300 dark:text-white/30">·</span>
-          <a href="https://dalansoft.com" target="_blank" rel="noreferrer" className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors">dalansoft.com</a>
-          <span aria-hidden className="text-ink-300 dark:text-white/30">·</span>
-          <a href="mailto:info@dalansoft.com" className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors">info@dalansoft.com</a>
+      {/* Page footer — 2-col rows (brand left, contact right) + centred © below */}
+      <footer className="relative z-10 border-t border-ink-200 dark:border-white/10 bg-white/70 dark:bg-black/30 backdrop-blur">
+        <div className="px-4 sm:px-6 md:px-10 lg:px-14 py-2 sm:py-3 text-[11px] lg:text-xs text-ink-600 dark:text-white/60">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+            <div className="whitespace-nowrap text-left">
+              Powered by{' '}
+              <span className="font-bold text-ink-800 dark:text-white/85">Dalan Health</span>
+            </div>
+            <a
+              href="https://dalansoft.com"
+              target="_blank"
+              rel="noreferrer"
+              className="text-right whitespace-nowrap hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
+            >
+              dalansoft.com
+            </a>
+            <div className="whitespace-nowrap text-left">
+              A Product of{' '}
+              <span className="font-bold text-ink-800 dark:text-white/85">Dalansoft Technologies</span>
+            </div>
+            <a
+              href="mailto:info@dalansoft.com"
+              className="text-right whitespace-nowrap hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
+            >
+              info@dalansoft.com
+            </a>
+          </div>
+          <div className="mt-1 text-center whitespace-nowrap">
+            © {year} Dalansoft Technologies
+          </div>
         </div>
       </footer>
     </div>

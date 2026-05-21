@@ -17,8 +17,8 @@ const sizes = {
 };
 
 /**
- * DalanHealth mark — green/teal heart-leaf medical icon paired with
- * a spaced uppercase wordmark. Modelled on the Paras-style reference.
+ * DalanHealth mark — stylised capital "D" with a 3-disk database stack
+ * peeking through a notch in the top, paired with a spaced uppercase wordmark.
  */
 export function Logo({ size = 'md', className, asLink = true, variant = 'auto', showWordmark = true }: Props) {
   const s = sizes[size];
@@ -31,13 +31,7 @@ export function Logo({ size = 'md', className, asLink = true, variant = 'auto', 
 
   const inner = (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <span className="relative inline-flex items-center justify-center">
-        <span
-          className="absolute inset-0 -z-10 rounded-[10px] bg-token blur-md opacity-40"
-          aria-hidden
-        />
-        <HeartLeafMark size={s.box} />
-      </span>
+      <DalanMark size={s.box} />
       {showWordmark && (
         <span className={cn('font-brand font-semibold leading-none tracking-[0.22em] uppercase', s.text, wordmarkClass)}>
           Dalan <span className="font-light opacity-80">Health</span>
@@ -55,32 +49,29 @@ export function Logo({ size = 'md', className, asLink = true, variant = 'auto', 
   );
 }
 
-/** Heart-leaf medical icon in green→teal gradient. */
-export function HeartLeafMark({ size = 34 }: { size?: number }) {
+/**
+ * DalanHealth brand mark — renders the user-supplied PNG from `/logo.png`
+ * verbatim (no recolouring, no halo, no SVG redraw). Drop the source file at
+ * `web/public/logo.png` and it will appear everywhere the Logo / DalanMark is
+ * used. Width/height stay square; `object-contain` preserves the file's own
+ * aspect ratio and transparency.
+ */
+export function DalanMark({ size = 34 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="dh-mark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#4ade80" />
-          <stop offset="55%" stopColor="#22c55e" />
-          <stop offset="100%" stopColor="#0d9488" />
-        </linearGradient>
-      </defs>
-      {/* Soft halo */}
-      <circle cx="20" cy="20" r="18" fill="url(#dh-mark)" opacity="0.12" />
-      {/* Heart-leaf body */}
-      <path
-        d="M20 33s-11-7.2-11-15.2A6.8 6.8 0 0 1 20 12a6.8 6.8 0 0 1 11 5.8C31 25.8 20 33 20 33Z"
-        fill="url(#dh-mark)"
-      />
-      {/* Inner medical cross */}
-      <path
-        d="M20 14.5v12M14.5 20.5h11"
-        stroke="#ffffff"
-        strokeWidth="2"
-        strokeLinecap="round"
-        opacity="0.95"
-      />
-    </svg>
+    <img
+      src="/logo.png"
+      alt="DalanHealth"
+      width={size}
+      height={size}
+      style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
+      draggable={false}
+    />
   );
 }
+
+/**
+ * Back-compat alias — older imports referenced `HeartLeafMark`. New code should
+ * use `DalanMark` directly.
+ * @deprecated Use {@link DalanMark}.
+ */
+export const HeartLeafMark = DalanMark;

@@ -60,9 +60,18 @@ export function PublicFooter() {
         ))}
       </div>
       <div className="border-t hairline">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted">
-          <div>© {new Date().getFullYear()} Dalansoft Technologies Pvt Ltd. All rights reserved.</div>
-          <div>Made in India · For India</div>
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
+          <div className="whitespace-nowrap">
+            Powered by{' '}
+            <span className="font-bold text-ink-800 dark:text-ink-100">Dalan Health</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 min-w-0 text-center">
+            <span>© {new Date().getFullYear()} Dalansoft Technologies Pvt Ltd. All rights reserved.</span>
+          </div>
+          <div className="whitespace-nowrap">
+            A Product of{' '}
+            <span className="font-bold text-ink-800 dark:text-ink-100">Dalansoft Technologies</span>
+          </div>
         </div>
       </div>
     </footer>
