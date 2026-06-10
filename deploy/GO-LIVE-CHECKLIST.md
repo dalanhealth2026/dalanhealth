@@ -6,14 +6,14 @@ Work top to bottom. Every box must be ticked before announcing the URL.
 - [ ] GitHub repo pushed (private), founder + CI have access
 - [ ] Vercel account created, project imported with **Root Directory = `web`**
 - [ ] Railway project created with **Root Directory = `backend`**
-- [ ] MongoDB Atlas M0 cluster (Mumbai) created
+- [ ] Neon PostgreSQL project created (Singapore region), pooled connection string copied
 - [ ] Upstash Redis database (ap-south-1) created
 - [ ] Cloudflare account holds DNS for dalanhealth.com + dalanhealth.in
 - [ ] Cloudflare R2 enabled, all 8 buckets created (`clinic-logos`, `doctor-profiles`, `patient-profiles`, `prescriptions`, `reports`, `exports`, `invoices`, `backups`)
 - [ ] Resend account created, domain `dalanhealth.com` **Verified**
 
 ## Secrets (never in git)
-- [ ] Railway vars set: `APP_ENV=production`, `MONGODB_URI`, `MONGODB_DB`, `JWT_SECRET` (fresh `openssl rand -hex 32`), `CORS_ORIGINS` (https origins only), `REDIS_URL`, `R2_*`, `RESEND_API_KEY`, `CASHFREE_*`
+- [ ] Railway vars set: `APP_ENV=production`, `DATABASE_URL` (Neon pooled), `JWT_SECRET` (fresh `openssl rand -hex 32`), `CORS_ORIGINS` (https origins only), `REDIS_URL`, `R2_*`, `RESEND_API_KEY`, `CASHFREE_*`
 - [ ] Vercel vars set: `VITE_API_BASE_URL`, `VITE_WS_URL`, `VITE_APP_URL`
 - [ ] GitHub Actions secrets set: `RAILWAY_TOKEN`, `RAILWAY_SERVICE`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
 - [ ] Demo OTP (`OTP_DEMO_CODE`) disabled or rotated for production
@@ -62,6 +62,6 @@ Work top to bottom. Every box must be ticked before announcing the URL.
 |---|---|---|
 | Railway | $5 credit/mo ≈ 500 exec hours | API sleeping / credit exhausted mid-month |
 | Vercel | 100 GB bandwidth/mo | Heavy TV/display traffic |
-| Atlas M0 | 512 MB storage | ~50k+ visits stored |
+| Neon Free | 0.5 GB storage, compute autosuspends after ~5 min idle | ~1 s wake-up latency annoying, or storage filling |
 | Upstash | 10k commands/day | Aggressive rate limiting / pub-sub |
 | Resend | 100 emails/day | OTP-heavy onboarding days |

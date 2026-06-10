@@ -1,16 +1,9 @@
 from datetime import datetime, timezone
-from typing import Annotated, Any
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
-from bson import ObjectId
 
+from pydantic import BaseModel, ConfigDict, Field
 
-def _obj_id(v: Any) -> str:
-    if isinstance(v, ObjectId):
-        return str(v)
-    return str(v) if v is not None else v
-
-
-PyObjectId = Annotated[str, BeforeValidator(_obj_id)]
+# Legacy alias from the MongoDB era — ids are plain UUID strings now.
+PyObjectId = str
 
 
 def utcnow() -> datetime:
@@ -18,7 +11,10 @@ def utcnow() -> datetime:
 
 
 class BaseDoc(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True, from_attributes=True)
-    id: PyObjectId | None = Field(default=None, alias="_id")
+    """Shared shape for API-facing Pydantic schemas. The persistent schema
+    lives in app/models/orm.py (SQLAlchemy); these classes describe payloads."""
+
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
+    id: str | None = None
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)

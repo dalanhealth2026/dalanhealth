@@ -1,47 +1,98 @@
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+"""Database layer — PostgreSQL via SQLAlchemy 2.0 async.
+
+Production:  Neon PostgreSQL  → DATABASE_URL=postgresql+asyncpg://…
+Local dev:   SQLite (zero setup) → default sqlite+aiosqlite:///./dalanhealth.db
+
+Tables are created automatically at boot (`Base.metadata.create_all`) — fine
+for a greenfield schema. When the schema starts evolving with real data in
+production, introduce Alembic migrations and remove create_all.
+"""
+
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import DeclarativeBase
+
 from app.config import settings
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+def _normalize_url(url: str) -> str:
+    """Accept common Postgres URL spellings (Neon/Railway hand out
+    `postgres://` or `postgresql://`) and route them to the asyncpg driver."""
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
 
 
 class Database:
     def __init__(self) -> None:
-        self.client: AsyncIOMotorClient | None = None
-        self.db: AsyncIOMotorDatabase | None = None
+        self.engine: AsyncEngine | None = None
+        self.session_factory: async_sessionmaker[AsyncSession] | None = None
 
     async def connect(self) -> None:
-        self.client = AsyncIOMotorClient(settings.mongodb_uri)
-        self.db = self.client[settings.mongodb_db]
-        await self._ensure_indexes()
+        url = _normalize_url(settings.database_url)
+        # Neon's pooled endpoints run PgBouncer (transaction mode) — disable
+        # asyncpg's prepared-statement cache, it's incompatible with PgBouncer.
+        connect_args = {"statement_cache_size": 0} if url.startswith("postgresql+asyncpg") else {}
+        self.engine = create_async_engine(
+            url,
+            echo=False,
+            pool_pre_ping=True,
+            connect_args=connect_args,
+        )
+        self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)
+
+        # Import models so create_all sees every table.
+        from app.models import orm  # noqa: F401
+
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
     async def disconnect(self) -> None:
-        if self.client:
-            self.client.close()
+        if self.engine:
+            await self.engine.dispose()
 
     async def ping(self) -> bool:
         try:
-            if self.client is None:
+            if self.engine is None:
                 return False
-            await self.client.admin.command("ping")
+            async with self.engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
             return True
         except Exception:
             return False
 
-    async def _ensure_indexes(self) -> None:
-        if self.db is None:
-            return
-        await self.db.users.create_index("mobile", unique=False)
-        await self.db.users.create_index("email", unique=False, sparse=True)
-        await self.db.clinics.create_index("name")
-        await self.db.patients.create_index([("clinic_id", 1), ("mobile", 1)])
-        await self.db.queue.create_index([("clinic_id", 1), ("date_key", 1), ("token", 1)])
-        await self.db.queue.create_index([("clinic_id", 1), ("date_key", 1), ("status", 1)])
-        await self.db.bookings.create_index([("clinic_id", 1), ("created_at", -1)])
-        await self.db.transactions.create_index([("clinic_id", 1), ("created_at", -1)])
-        await self.db.notifications.create_index([("user_id", 1), ("created_at", -1)])
-
-    def coll(self, name: str):
-        if self.db is None:
-            raise RuntimeError("Database not connected")
-        return self.db[name]
-
 
 db = Database()
+
+
+async def get_session() -> AsyncIterator[AsyncSession]:
+    """FastAPI dependency — one session per request."""
+    if db.session_factory is None:
+        raise RuntimeError("Database not connected")
+    async with db.session_factory() as session:
+        yield session
+
+
+@asynccontextmanager
+async def session_scope() -> AsyncIterator[AsyncSession]:
+    """For services that run outside a request dependency."""
+    if db.session_factory is None:
+        raise RuntimeError("Database not connected")
+    async with db.session_factory() as session:
+        yield session

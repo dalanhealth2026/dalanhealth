@@ -2,22 +2,24 @@
 
 Single source of truth: backend. Clients render, never compute.
 """
+
 from datetime import datetime, timezone
-from app.database import db
+
+from sqlalchemy import func, select
+
+from app.database import session_scope
+from app.models.orm import QueueEntryRow, row_to_dict
 from app.models.queue import QueueSource, QueueStatus
+
+ACTIVE_STATUSES = [
+    QueueStatus.waiting.value,
+    QueueStatus.queued.value,
+    QueueStatus.in_consultation.value,
+]
 
 
 def today_key() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-
-async def next_token(clinic_id: str, date_key: str) -> int:
-    coll = db.coll("queue")
-    doc = await coll.find_one(
-        {"clinic_id": clinic_id, "date_key": date_key},
-        sort=[("token", -1)],
-    )
-    return (doc["token"] + 1) if doc else 1
 
 
 async def enqueue(
@@ -28,86 +30,120 @@ async def enqueue(
     source: QueueSource,
 ) -> dict:
     date_key = today_key()
-    token = await next_token(clinic_id, date_key)
-    doc = {
-        "clinic_id": clinic_id,
-        "date_key": date_key,
-        "token": token,
-        "patient_id": patient_id,
-        "patient_name": patient_name,
-        "patient_mobile": patient_mobile,
-        "source": source.value if isinstance(source, QueueSource) else source,
-        "status": QueueStatus.waiting.value,
-        "joined_at": datetime.now(timezone.utc).strftime("%H:%M"),
-        "created_at": datetime.now(timezone.utc),
-    }
-    res = await db.coll("queue").insert_one(doc)
-    doc["_id"] = str(res.inserted_id)
-    await _recompute_statuses(clinic_id, date_key)
-    return doc
+    async with session_scope() as session:
+        max_token = await session.scalar(
+            select(func.max(QueueEntryRow.token)).where(
+                QueueEntryRow.clinic_id == clinic_id,
+                QueueEntryRow.date_key == date_key,
+            )
+        )
+        entry = QueueEntryRow(
+            clinic_id=clinic_id,
+            date_key=date_key,
+            token=(max_token or 0) + 1,
+            patient_id=patient_id,
+            patient_name=patient_name,
+            patient_mobile=patient_mobile,
+            source=source.value if isinstance(source, QueueSource) else str(source),
+            status=QueueStatus.waiting.value,
+            joined_at=datetime.now(timezone.utc).strftime("%H:%M"),
+        )
+        session.add(entry)
+        await session.flush()
+        await _recompute_statuses(session, clinic_id, date_key)
+        result = row_to_dict(entry)
+        await session.commit()
+    return result
 
 
-async def _recompute_statuses(clinic_id: str, date_key: str) -> None:
+async def _recompute_statuses(session, clinic_id: str, date_key: str) -> None:
     """Top of queue → Consultation, next → Queue, rest → Waiting (active only)."""
-    coll = db.coll("queue")
-    cursor = coll.find(
-        {
-            "clinic_id": clinic_id,
-            "date_key": date_key,
-            "status": {"$in": [QueueStatus.waiting.value, QueueStatus.queued.value, QueueStatus.in_consultation.value]},
-        }
-    ).sort("token", 1)
-    active = await cursor.to_list(length=500)
-    for i, entry in enumerate(active):
-        if i == 0:
-            target = QueueStatus.in_consultation.value
-        elif i == 1:
-            target = QueueStatus.queued.value
-        else:
-            target = QueueStatus.waiting.value
-        if entry.get("status") != target:
-            await coll.update_one({"_id": entry["_id"]}, {"$set": {"status": target}})
+    rows = (
+        await session.scalars(
+            select(QueueEntryRow)
+            .where(
+                QueueEntryRow.clinic_id == clinic_id,
+                QueueEntryRow.date_key == date_key,
+                QueueEntryRow.status.in_(ACTIVE_STATUSES),
+            )
+            .order_by(QueueEntryRow.token)
+        )
+    ).all()
+    for i, entry in enumerate(rows):
+        target = (
+            QueueStatus.in_consultation.value
+            if i == 0
+            else QueueStatus.queued.value
+            if i == 1
+            else QueueStatus.waiting.value
+        )
+        if entry.status != target:
+            entry.status = target
+
+
+async def _current(session, clinic_id: str, date_key: str) -> QueueEntryRow | None:
+    return await session.scalar(
+        select(QueueEntryRow).where(
+            QueueEntryRow.clinic_id == clinic_id,
+            QueueEntryRow.date_key == date_key,
+            QueueEntryRow.status == QueueStatus.in_consultation.value,
+        )
+    )
 
 
 async def complete_current(clinic_id: str) -> dict | None:
     """Mark current consultation completed, deduct wallet, advance queue."""
     date_key = today_key()
-    coll = db.coll("queue")
-    current = await coll.find_one(
-        {"clinic_id": clinic_id, "date_key": date_key, "status": QueueStatus.in_consultation.value}
-    )
-    if not current:
-        return None
-    await coll.update_one({"_id": current["_id"]}, {"$set": {"status": QueueStatus.completed.value}})
-    await _recompute_statuses(clinic_id, date_key)
+    async with session_scope() as session:
+        current = await _current(session, clinic_id, date_key)
+        if not current:
+            return None
+        current.status = QueueStatus.completed.value
+        await _recompute_statuses(session, clinic_id, date_key)
+        result = row_to_dict(current)
+        await session.commit()
 
-    # Wallet deduction happens here (only on completion)
+    # Wallet deduction happens here (only on completion).
     from app.services.wallet_service import deduct_consultation
-    await deduct_consultation(clinic_id, str(current["_id"]))
 
-    return current
+    await deduct_consultation(clinic_id, result["id"])
+    return result
 
 
 async def skip_current(clinic_id: str) -> dict | None:
+    """Send the current patient to the back of today's queue by bumping their
+    token past the current max (replaces the old token=9999 hack)."""
     date_key = today_key()
-    coll = db.coll("queue")
-    current = await coll.find_one(
-        {"clinic_id": clinic_id, "date_key": date_key, "status": QueueStatus.in_consultation.value}
-    )
-    if not current:
-        return None
-    await coll.update_one({"_id": current["_id"]}, {"$set": {"status": QueueStatus.waiting.value, "token": 9999}})
-    await _recompute_statuses(clinic_id, date_key)
-    return current
+    async with session_scope() as session:
+        current = await _current(session, clinic_id, date_key)
+        if not current:
+            return None
+        max_token = await session.scalar(
+            select(func.max(QueueEntryRow.token)).where(
+                QueueEntryRow.clinic_id == clinic_id,
+                QueueEntryRow.date_key == date_key,
+            )
+        )
+        current.token = (max_token or 0) + 1
+        current.status = QueueStatus.waiting.value
+        await _recompute_statuses(session, clinic_id, date_key)
+        result = row_to_dict(current)
+        await session.commit()
+    return result
 
 
 async def list_active(clinic_id: str) -> list[dict]:
     date_key = today_key()
-    docs = await db.coll("queue").find(
-        {
-            "clinic_id": clinic_id,
-            "date_key": date_key,
-            "status": {"$in": [QueueStatus.waiting.value, QueueStatus.queued.value, QueueStatus.in_consultation.value]},
-        }
-    ).sort("token", 1).to_list(length=500)
-    return [{**d, "_id": str(d["_id"])} for d in docs]
+    async with session_scope() as session:
+        rows = (
+            await session.scalars(
+                select(QueueEntryRow)
+                .where(
+                    QueueEntryRow.clinic_id == clinic_id,
+                    QueueEntryRow.date_key == date_key,
+                    QueueEntryRow.status.in_(ACTIVE_STATUSES),
+                )
+                .order_by(QueueEntryRow.token)
+            )
+        ).all()
+        return [row_to_dict(r) for r in rows]

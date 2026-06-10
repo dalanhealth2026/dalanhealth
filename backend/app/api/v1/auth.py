@@ -1,12 +1,13 @@
-from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
-from bson import ObjectId
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.security import hash_password, verify_password, create_access_token
-from app.auth.deps import get_current_user, CurrentUser
+from app.auth.deps import CurrentUser, get_current_user
+from app.auth.security import create_access_token, hash_password, verify_password
 from app.config import settings
-from app.database import db
+from app.database import get_session
+from app.models.orm import ClinicRow, UserRow
 from app.models.user import Role
 
 router = APIRouter()
@@ -54,27 +55,19 @@ async def send_otp(req: SendOtpReq):
 
 
 @router.post("/otp/verify", response_model=TokenResp)
-async def verify_otp(req: VerifyOtpReq):
+async def verify_otp(req: VerifyOtpReq, session: AsyncSession = Depends(get_session)):
     if req.otp != settings.otp_demo_code:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid OTP")
-    users = db.coll("users")
-    existing = await users.find_one({"mobile": req.mobile, "role": req.role.value})
+    existing = await session.scalar(
+        select(UserRow).where(UserRow.mobile == req.mobile, UserRow.role == req.role.value)
+    )
     if not existing:
-        result = await users.insert_one({
-            "name": req.name or "Patient",
-            "mobile": req.mobile,
-            "role": req.role.value,
-            "is_active": True,
-            "is_demo": False,
-            "created_at": datetime.now(timezone.utc),
-        })
-        user_id = str(result.inserted_id)
-        clinic_id = None
-        name = req.name or "Patient"
+        user = UserRow(name=req.name or "Patient", mobile=req.mobile, role=req.role.value)
+        session.add(user)
+        await session.commit()
+        user_id, clinic_id, name = user.id, None, user.name
     else:
-        user_id = str(existing["_id"])
-        clinic_id = existing.get("clinic_id")
-        name = existing.get("name", "Patient")
+        user_id, clinic_id, name = existing.id, existing.clinic_id, existing.name
 
     token = create_access_token(user_id, req.role.value, clinic_id)
     return TokenResp(
@@ -84,90 +77,80 @@ async def verify_otp(req: VerifyOtpReq):
 
 
 @router.post("/login", response_model=TokenResp)
-async def login(req: PasswordLoginReq):
-    users = db.coll("users")
-    user = await users.find_one({"email": req.email, "role": req.role.value})
-    if not user or not user.get("password_hash") or not verify_password(req.password, user["password_hash"]):
+async def login(req: PasswordLoginReq, session: AsyncSession = Depends(get_session)):
+    user = await session.scalar(
+        select(UserRow).where(UserRow.email == req.email, UserRow.role == req.role.value)
+    )
+    if not user or not user.password_hash or not verify_password(req.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
-    user_id = str(user["_id"])
-    clinic_id = user.get("clinic_id")
-    token = create_access_token(user_id, req.role.value, clinic_id)
+    token = create_access_token(user.id, req.role.value, user.clinic_id)
     return TokenResp(
         access_token=token,
         user={
-            "id": user_id,
-            "name": user.get("name", ""),
+            "id": user.id,
+            "name": user.name,
             "role": req.role.value,
-            "email": user.get("email"),
-            "clinic_id": clinic_id,
+            "email": user.email,
+            "clinic_id": user.clinic_id,
         },
     )
 
 
 @router.post("/signup/clinic", response_model=TokenResp)
-async def signup_clinic(req: ClinicSignupReq):
-    users = db.coll("users")
-    clinics = db.coll("clinics")
-    existing = await users.find_one({"email": req.email, "role": Role.clinic_admin.value})
+async def signup_clinic(req: ClinicSignupReq, session: AsyncSession = Depends(get_session)):
+    existing = await session.scalar(
+        select(UserRow).where(UserRow.email == req.email, UserRow.role == Role.clinic_admin.value)
+    )
     if existing:
         raise HTTPException(status.HTTP_409_CONFLICT, "Account already exists for this email")
 
-    clinic_doc = {
-        "name": req.clinic_name,
-        "doctor_name": req.doctor_name,
-        "mobile": req.mobile,
-        "email": req.email,
-        "city": req.city,
-        "specialization": req.specialization,
-        "plan": req.plan,
-        "wallet_balance": 0.0,
-        "consultation_fee": 300,
-        "booking_fee": 1,
-        "is_active": True,
-        "created_at": datetime.now(timezone.utc),
-    }
-    clinic_res = await clinics.insert_one(clinic_doc)
-    clinic_id = str(clinic_res.inserted_id)
+    clinic = ClinicRow(
+        name=req.clinic_name,
+        doctor_name=req.doctor_name,
+        mobile=req.mobile,
+        email=req.email,
+        city=req.city,
+        specialization=req.specialization,
+        plan=req.plan,
+    )
+    session.add(clinic)
+    await session.flush()
 
-    user_doc = {
-        "name": req.doctor_name,
-        "role": Role.clinic_admin.value,
-        "mobile": req.mobile,
-        "email": req.email,
-        "password_hash": hash_password(req.password),
-        "clinic_id": clinic_id,
-        "is_active": True,
-        "is_demo": False,
-        "created_at": datetime.now(timezone.utc),
-    }
-    user_res = await users.insert_one(user_doc)
-    user_id = str(user_res.inserted_id)
+    user = UserRow(
+        name=req.doctor_name,
+        role=Role.clinic_admin.value,
+        mobile=req.mobile,
+        email=req.email,
+        password_hash=hash_password(req.password),
+        clinic_id=clinic.id,
+    )
+    session.add(user)
+    await session.commit()
 
-    token = create_access_token(user_id, Role.clinic_admin.value, clinic_id)
+    token = create_access_token(user.id, Role.clinic_admin.value, clinic.id)
     return TokenResp(
         access_token=token,
         user={
-            "id": user_id,
+            "id": user.id,
             "name": req.doctor_name,
             "role": Role.clinic_admin.value,
             "email": req.email,
-            "clinic_id": clinic_id,
+            "clinic_id": clinic.id,
             "clinic_name": req.clinic_name,
         },
     )
 
 
 @router.get("/me")
-async def me(user: CurrentUser = Depends(get_current_user)):
-    users = db.coll("users")
-    doc = await users.find_one({"_id": ObjectId(user.user_id)})
-    if not doc:
+async def me(user: CurrentUser = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
+    row = await session.get(UserRow, user.user_id)
+    if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
     return {
-        "id": str(doc["_id"]),
-        "name": doc.get("name"),
-        "role": doc.get("role"),
-        "email": doc.get("email"),
-        "mobile": doc.get("mobile"),
-        "clinic_id": doc.get("clinic_id"),
+        "id": row.id,
+        "name": row.name,
+        "role": row.role,
+        "email": row.email,
+        "mobile": row.mobile,
+        "clinic_id": row.clinic_id,
     }

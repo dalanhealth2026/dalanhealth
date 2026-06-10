@@ -1,8 +1,11 @@
-from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from app.auth.deps import get_current_user, CurrentUser
-from app.database import db
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.deps import CurrentUser, get_current_user
+from app.database import get_session
+from app.models.orm import PrescriptionRow, row_to_dict
 
 router = APIRouter()
 
@@ -26,21 +29,35 @@ class PrescriptionIn(BaseModel):
 
 
 @router.post("/")
-async def create_prescription(p: PrescriptionIn, user: CurrentUser = Depends(get_current_user)):
+async def create_prescription(
+    p: PrescriptionIn,
+    user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
     if not user.clinic_id:
         raise HTTPException(400, "Clinic context required")
-    doc = {
-        **p.model_dump(),
-        "clinic_id": user.clinic_id,
-        "created_at": datetime.now(timezone.utc),
-    }
-    res = await db.coll("prescriptions").insert_one(doc)
-    return {"id": str(res.inserted_id), **{k: v for k, v in doc.items() if k != "_id"}}
+    data = p.model_dump()
+    data["medicines"] = [m if isinstance(m, dict) else m for m in data["medicines"]]
+    row = PrescriptionRow(**data, clinic_id=user.clinic_id)
+    session.add(row)
+    await session.commit()
+    return row_to_dict(row)
 
 
 @router.get("/")
-async def list_prescriptions(user: CurrentUser = Depends(get_current_user), limit: int = 50):
+async def list_prescriptions(
+    user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+    limit: int = 50,
+):
     if not user.clinic_id:
         raise HTTPException(400, "Clinic context required")
-    docs = await db.coll("prescriptions").find({"clinic_id": user.clinic_id}).sort("created_at", -1).to_list(limit)
-    return [{**d, "_id": str(d["_id"])} for d in docs]
+    rows = (
+        await session.scalars(
+            select(PrescriptionRow)
+            .where(PrescriptionRow.clinic_id == user.clinic_id)
+            .order_by(PrescriptionRow.created_at.desc())
+            .limit(limit)
+        )
+    ).all()
+    return [row_to_dict(r) for r in rows]

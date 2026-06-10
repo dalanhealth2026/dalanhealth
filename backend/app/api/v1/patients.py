@@ -1,9 +1,11 @@
-from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from bson import ObjectId
-from app.auth.deps import get_current_user, CurrentUser
-from app.database import db
+from sqlalchemy import or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.deps import CurrentUser, get_current_user
+from app.database import get_session
+from app.models.orm import PatientRow, row_to_dict
 
 router = APIRouter()
 
@@ -18,35 +20,45 @@ class PatientIn(BaseModel):
 
 
 @router.get("/lookup")
-async def lookup(mobile: str, user: CurrentUser = Depends(get_current_user)):
+async def lookup(
+    mobile: str,
+    user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
     if not user.clinic_id:
         raise HTTPException(400, "Clinic context required")
-    doc = await db.coll("patients").find_one({"clinic_id": user.clinic_id, "mobile": mobile})
-    if not doc:
+    row = await session.scalar(
+        select(PatientRow).where(PatientRow.clinic_id == user.clinic_id, PatientRow.mobile == mobile)
+    )
+    if not row:
         return {"found": False}
-    return {"found": True, "patient": {**doc, "_id": str(doc["_id"])}}
+    return {"found": True, "patient": row_to_dict(row)}
 
 
 @router.post("/")
-async def create_patient(p: PatientIn, user: CurrentUser = Depends(get_current_user)):
+async def create_patient(
+    p: PatientIn,
+    user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
     if not user.clinic_id:
         raise HTTPException(400, "Clinic context required")
-    doc = {
-        **p.model_dump(),
-        "clinic_id": user.clinic_id,
-        "visit_count": 0,
-        "created_at": datetime.now(timezone.utc),
-    }
-    res = await db.coll("patients").insert_one(doc)
-    return {"id": str(res.inserted_id), **{k: v for k, v in doc.items() if k != "_id"}}
+    row = PatientRow(**p.model_dump(), clinic_id=user.clinic_id)
+    session.add(row)
+    await session.commit()
+    return row_to_dict(row)
 
 
 @router.get("/")
-async def list_patients(q: str | None = None, user: CurrentUser = Depends(get_current_user)):
+async def list_patients(
+    q: str | None = None,
+    user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
     if not user.clinic_id:
         raise HTTPException(400, "Clinic context required")
-    query: dict = {"clinic_id": user.clinic_id}
+    stmt = select(PatientRow).where(PatientRow.clinic_id == user.clinic_id)
     if q:
-        query["$or"] = [{"name": {"$regex": q, "$options": "i"}}, {"mobile": {"$regex": q}}]
-    docs = await db.coll("patients").find(query).sort("created_at", -1).to_list(length=200)
-    return [{**d, "_id": str(d["_id"])} for d in docs]
+        stmt = stmt.where(or_(PatientRow.name.ilike(f"%{q}%"), PatientRow.mobile.like(f"%{q}%")))
+    rows = (await session.scalars(stmt.order_by(PatientRow.created_at.desc()).limit(200))).all()
+    return [row_to_dict(r) for r in rows]

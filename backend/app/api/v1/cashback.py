@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from app.auth.deps import get_current_user, CurrentUser
+
+from app.auth.deps import CurrentUser, get_current_user
 from app.models.cashback import CashbackCampaignType
 from app.services import cashback_service
 
@@ -18,11 +19,8 @@ class UsePreviewReq(BaseModel):
 
 @router.get("/balance")
 async def balance(user: CurrentUser = Depends(get_current_user)):
-    from bson import ObjectId
-    from app.database import db
-    doc = await db.coll("users").find_one({"_id": ObjectId(user.user_id)})
-    bal = float((doc or {}).get("meta", {}).get("cashback_balance", 0))
-    return {"balance": round(bal, 2)}
+    bal = await cashback_service.get_balance(user.user_id)
+    return {"balance": bal}
 
 
 @router.post("/earn")

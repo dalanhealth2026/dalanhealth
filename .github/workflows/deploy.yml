@@ -53,9 +53,9 @@ jobs:
       - run: pip install -r requirements.txt
       # Boot-time sanity: app imports cleanly (catches syntax/config errors).
       - run: python -c "import main; print('FastAPI app OK:', main.app.title)"
-      # Unit tests — runs if a tests/ folder exists, succeeds otherwise.
-      - run: |
-          if [ -d tests ]; then pip install pytest && pytest -q; else echo "No tests yet — skipping"; fi
+      # End-to-end smoke: boots the app on SQLite and exercises auth, queue,
+      # wallet, billing, prescriptions, cashback against the real data layer.
+      - run: python -X utf8 smoke_test.py
 
   # ── 3. Deploy backend to Railway ──────────────────────────────────────
   deploy-api:

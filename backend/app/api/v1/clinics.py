@@ -1,23 +1,31 @@
 from fastapi import APIRouter, Depends, HTTPException
-from bson import ObjectId
-from app.auth.deps import get_current_user, CurrentUser, require_roles
-from app.database import db
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.deps import CurrentUser, get_current_user, require_roles
+from app.database import get_session
+from app.models.orm import ClinicRow, row_to_dict
 
 router = APIRouter()
 
 
 @router.get("/")
-async def list_clinics(user: CurrentUser = Depends(require_roles("super_admin"))):
-    clinics = db.coll("clinics")
-    docs = await clinics.find({}, {"password_hash": 0}).to_list(length=500)
-    return [{**d, "_id": str(d["_id"])} for d in docs]
+async def list_clinics(
+    user: CurrentUser = Depends(require_roles("super_admin")),
+    session: AsyncSession = Depends(get_session),
+):
+    rows = (await session.scalars(select(ClinicRow).limit(500))).all()
+    return [row_to_dict(r) for r in rows]
 
 
 @router.get("/me")
-async def my_clinic(user: CurrentUser = Depends(get_current_user)):
+async def my_clinic(
+    user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
     if not user.clinic_id:
         raise HTTPException(404, "No clinic for this user")
-    doc = await db.coll("clinics").find_one({"_id": ObjectId(user.clinic_id)})
-    if not doc:
+    row = await session.get(ClinicRow, user.clinic_id)
+    if not row:
         raise HTTPException(404, "Clinic not found")
-    return {**doc, "_id": str(doc["_id"])}
+    return row_to_dict(row)

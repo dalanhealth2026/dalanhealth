@@ -13,8 +13,8 @@
    www / tv / admin                 │                       │
                                     │              ┌────────┼─────────┬──────────┐
                                     ▼              ▼        ▼         ▼          ▼
-                               browsers      MongoDB    Upstash   Cloudflare  Resend
-                                              Atlas      Redis       R2       (email)
+                               browsers        Neon      Upstash  Cloudflare  Resend
+                                            PostgreSQL    Redis      R2       (email)
 ```
 
 ## ⚠️ Stack corrections vs. the original brief
@@ -26,7 +26,7 @@ what DalanHealth **actually is**:
 |---|---|---|
 | Next.js frontend | **Vite + React SPA** (`web/`) | Vercel static build (`framework: vite`), SPA rewrites in `vercel.json` |
 | Node/Express + Socket.IO backend | **FastAPI + native WebSocket** (`backend/`) | Railway Dockerfile deploy; WS works out of the box, no Socket.IO adapter needed |
-| Neon PostgreSQL + Prisma | **MongoDB (Motor)** | **MongoDB Atlas M0 free tier**. Neon/Prisma would require rewriting every model + query — that's a migration project, not a deployment step |
+| Neon PostgreSQL + Prisma | FastAPI + SQLAlchemy 2.0 async | **Neon PostgreSQL** ✅ (data layer rewritten from the original MongoDB to SQLAlchemy + asyncpg; schema in `backend/app/models/orm.py`, no Prisma — that's a Node tool) |
 | `NEXT_PUBLIC_*` env vars | Vite | `VITE_*` env vars |
 
 Everything else (Vercel, Railway, Upstash, R2, Resend, GitHub Actions,
@@ -71,7 +71,7 @@ cd web && npx vercel link    # creates .vercel/project.json → orgId, projectId
 2. **Service → Settings → Root Directory:** `backend`. Railway reads
    `backend/railway.json` → builds the **Dockerfile**, probes **`/health`**.
 3. Variables (Service → Variables) — copy names from `backend/.env.example`:
-   `APP_ENV=production`, `MONGODB_URI`, `MONGODB_DB=dalanhealth`,
+   `APP_ENV=production`, `DATABASE_URL` (Neon pooled string, §3),
    `JWT_SECRET` (`openssl rand -hex 32`), `CORS_ORIGINS=https://dalanhealth.com,https://www.dalanhealth.com,https://tv.dalanhealth.com,https://admin.dalanhealth.com`,
    `REDIS_URL`, `R2_ACCOUNT_ID/ACCESS_KEY/SECRET_KEY`, `RESEND_API_KEY`,
    `CASHFREE_CLIENT_ID/SECRET_KEY`.
@@ -79,33 +79,44 @@ cd web && npx vercel link    # creates .vercel/project.json → orgId, projectId
    `api.dalanhealth.com` → Railway shows a CNAME target → add it in
    Cloudflare (see `DNS.md`). HTTPS is automatic.
 5. Dev environment (optional): Railway → Environments → New → `development`,
-   pointed at a `dalanhealth_dev` Atlas database.
+   pointed at the Neon `dev` branch's connection string.
 6. Generate a **project token** (Project → Settings → Tokens) → GitHub secret
    `RAILWAY_TOKEN`; set `RAILWAY_SERVICE` to the service name.
 
 WebSocket: FastAPI's `/ws` works over Railway HTTPS/WSS natively — no
 adapter, no sticky sessions needed at one replica.
 
-## 3. MongoDB Atlas — database (Neon substitute)
+## 3. Neon — PostgreSQL database
 
-1. [mongodb.com/atlas](https://www.mongodb.com/atlas) → create a **free M0
-   cluster**, region **Mumbai (ap-south-1)** (closest to Bihar users).
-2. Database Access → add user `dalan_api` (Read/write to any database) with a
-   generated password.
-3. Network Access → **Allow access from anywhere** (`0.0.0.0/0`) — Railway
-   free tier has no static egress IPs; security rests on the strong password
-   + TLS (enforced by Atlas).
-4. Connect → Drivers → copy the `mongodb+srv://…` string → Railway
-   `MONGODB_URI`.
-5. Environments on one free cluster — separate **database names**, not
-   clusters: `dalanhealth` (prod), `dalanhealth_dev`, `dalanhealth_test`,
-   `dalanhealth_uat` (set per environment via `MONGODB_DB`).
-6. Backups: M0 has no automated snapshots. Schedule a weekly GitHub Action
-   running `mongodump` → upload to the R2 `backups` bucket (cron workflow —
-   add when data becomes real).
-7. Indexes are created automatically at boot (`app/database.py`). No
-   migration framework is needed for MongoDB; schema lives in the Pydantic
-   models.
+1. [neon.tech](https://neon.tech) → sign up → **Create project**:
+   - Name: `dalanhealth`
+   - Postgres version: 16 (default)
+   - Region: **AWS ap-southeast-1 (Singapore)** — Neon has no Mumbai region;
+     Singapore is the closest (~60 ms from Bihar, fine for an API).
+2. The project comes with a default database (`neondb`) and role. Optionally
+   rename the database to `dalanhealth` (Databases → New database).
+3. **Connection string:** dashboard → Connect → select **Pooled connection**
+   (the host contains `-pooler`) → copy. It looks like:
+   ```
+   postgresql://neondb_owner:npg_xxxx@ep-xxxx-pooler.ap-southeast-1.aws.neon.tech/dalanhealth?sslmode=require
+   ```
+   **This is `DATABASE_URL`** → paste into Railway. The backend accepts the
+   `postgresql://` spelling and routes it to asyncpg automatically; the
+   PgBouncer-incompatible prepared-statement cache is already disabled in
+   `app/database.py`.
+4. **Environments via branching** (Neon's killer feature): Branches → New
+   branch `dev` (and `test` / `uat` when needed) — each branch is an
+   instant copy-on-write copy of production with its own connection string.
+   Point Railway's development environment at the `dev` branch URL.
+5. **Backups:** the free plan keeps **point-in-time restore history**
+   (rewind any branch). For belt-and-braces, schedule a weekly `pg_dump` →
+   R2 `backups` bucket via GitHub Actions cron when real data lands.
+6. **Schema:** tables are created automatically at boot
+   (`Base.metadata.create_all` in `app/database.py`); definitions live in
+   `backend/app/models/orm.py`. When the schema starts evolving with real
+   production data, add Alembic migrations and drop create_all.
+7. Free-tier note: Neon autosuspends compute after ~5 min idle; the first
+   request after a sleep takes ~1 s extra to wake. Fine for launch.
 
 ## 4. Upstash — Redis
 

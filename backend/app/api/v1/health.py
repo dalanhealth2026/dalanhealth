@@ -2,7 +2,7 @@
 go-live smoke tests.
 
 GET /health           — liveness (always 200 while the process runs)
-GET /health/database  — MongoDB ping
+GET /health/database  — PostgreSQL ping (SELECT 1)
 GET /health/redis     — Upstash Redis ping        (503 "not_configured" if unset)
 GET /health/storage   — Cloudflare R2 reachability (503 "not_configured" if unset)
 GET /health/email     — Resend API key validity    (503 "not_configured" if unset)
@@ -49,8 +49,8 @@ async def health():
 @router.get("/database")
 async def health_database():
     if await db.ping():
-        return _ok({"database": settings.mongodb_db})
-    return _fail("unreachable", "MongoDB ping failed")
+        return _ok({"database": "postgresql"})
+    return _fail("unreachable", "Database ping failed (SELECT 1)")
 
 
 @router.get("/redis")
