@@ -98,17 +98,23 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
+      # Free-domain URLs for now; swap to api.dalanhealth.com / dalanhealth.com
+      # when the custom domain is added.
       - name: API /health
         run: |
           for i in 1 2 3 4 5; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" https://api.dalanhealth.com/health || true)
+            code=$(curl -s -o /dev/null -w "%{http_code}" https://dalanhealth.up.railway.app/health || true)
             [ "$code" = "200" ] && echo "API healthy ✅" && exit 0
             echo "attempt $i → $code, retrying in 15s…" && sleep 15
           done
           echo "API health check failed ❌" && exit 1
+      - name: API /health/database
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" https://dalanhealth.up.railway.app/health/database || true)
+          [ "$code" = "200" ] && echo "Database healthy ✅" || { echo "Database check returned $code ❌"; exit 1; }
       - name: Frontend reachable
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" -L https://dalanhealth.com || true)
+          code=$(curl -s -o /dev/null -w "%{http_code}" -L https://dalanhealth.vercel.app || true)
           [ "$code" = "200" ] && echo "Web healthy ✅" || { echo "Web returned $code ❌"; exit 1; }
       - name: Success
         run: echo "🚀 DalanHealth deployed — laptop can sleep."
