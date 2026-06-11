@@ -9,7 +9,7 @@ const demos = [
   {
     role: 'patient',
     title: 'Patient app',
-    desc: 'Doctor search, QR join queue, live token tracking, ₹1 booking and cashback wallet.',
+    desc: 'Doctor search, QR join queue, live token tracking, ₹5/visit booking and cashback wallet.',
     icon: Smartphone,
     tone: 'from-brand-500/15 to-brand-500/0',
     color: 'text-brand-600 dark:text-brand-300',

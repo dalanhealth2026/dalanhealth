@@ -6,7 +6,8 @@ import { cn } from '@/lib/cn';
 
 const faqs = [
   { q: 'Why a queue instead of fixed slots?', a: 'Tier-2/3 clinics in India run on walk-ins. Patients show up, take a token, wait. Fixed 15-minute slots assume metro behaviour and break the moment a single consultation runs long. DalanHealth gives you the visibility of slots without breaking the queue-based reality.' },
-  { q: 'How does the wallet deduction work?', a: 'You prepay your wallet. We deduct ₹9 (Starter) or ₹12 (Growth) only when a consultation is marked complete. Cancellations, no-shows and tokens generated but not consulted are never charged.' },
+  { q: 'How does the wallet deduction work?', a: 'You prepay your wallet. We deduct ₹9 + GST only when a consultation is marked complete. Cancellations, no-shows and tokens generated but not consulted are never charged — you only pay when you earn.' },
+  { q: 'Is there a setup fee, monthly fee, or annual contract?', a: 'No. ₹9 + GST per completed patient is the entire price. No setup fee, no installation charges, no monthly or annual subscription, no AMC, no per-doctor license, no hardware or server purchase, no IT team needed.' },
   { q: 'Is patient data secure?', a: 'Yes. JWT authentication, role-based access control, encrypted data at rest, audit logs, and strict clinic_id isolation so one clinic can never see another\'s data.' },
   { q: 'What about offline patients?', a: 'Offline walk-ins are first-class. Your receptionist enters the mobile number, generates a token in 5 seconds, and the patient appears in the same unified queue as online and QR joiners.' },
   { q: 'Do patients need to install the app?', a: 'Only for online booking and live token tracking. Walk-in patients don\'t need the app — they get a printed/spoken token. QR join offers the smoothest in-clinic experience (scan → install → joined).' },

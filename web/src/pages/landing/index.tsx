@@ -6,6 +6,7 @@ import { Features } from './Features';
 import { DemoSection } from './DemoSection';
 import { Showcase } from './Showcase';
 import { Pricing } from './Pricing';
+import { Subscribe } from './Subscribe';
 import { FAQ } from './FAQ';
 import { CTA } from './CTA';
 
@@ -26,6 +27,7 @@ export function LandingPage() {
       <DemoSection />
       <Showcase />
       <Pricing />
+      <Subscribe />
       <FAQ />
       <CTA />
     </>

@@ -18,7 +18,7 @@ const features = [
   { icon: BarChart3, title: 'Reports & analytics', desc: 'Daily revenue, queue trends, follow-up funnels, source mix.' },
   { icon: UserCog, title: 'Staff management', desc: 'Receptionist, compounder, billing roles — RBAC built in.' },
   { icon: Stethoscope, title: 'Doctor dashboard', desc: 'Next patient, history, vitals, prior prescriptions — one tap.' },
-  { icon: Smartphone, title: 'Patient mobile app', desc: 'Search doctors, join queue, track token, pay ₹1 booking — all in one place.' },
+  { icon: Smartphone, title: 'Patient mobile app', desc: 'Search doctors, join queue, track token, ₹5 per visit — all in one place.' },
 ];
 
 export function Features() {
