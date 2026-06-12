@@ -49,7 +49,9 @@ const SOURCES = [
 function UserPlusIcon() { return UserPlus; }
 
 export function TokenMergeShowcase() {
-  const [tick, setTick] = useState(0);
+  // Start at 3 so the queue renders all 4 rows from the first paint —
+  // rows growing in one by one changed the page height under the reader.
+  const [tick, setTick] = useState(3);
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 2200);
     return () => clearInterval(id);
@@ -393,7 +395,9 @@ export function PatientJourneyShowcase() {
               <div className="text-[10px] text-muted">Token updates</div>
             </div>
           </div>
-          <div className="p-4 space-y-2.5 min-h-[260px]">
+          {/* Fixed height (not min-h): the looping typing indicator must never
+              change the page height, or the footer visibly jumps. */}
+          <div className="p-4 space-y-2.5 h-[300px] overflow-hidden">
             {/* Keyed remount per cycle (no exit animations — see queue note). */}
             {PATIENT_MSGS.slice(0, visible).map((m, i) => (
               <motion.div
