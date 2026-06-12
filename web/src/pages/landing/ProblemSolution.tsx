@@ -15,9 +15,9 @@ const problems = [
 export function ProblemSolution() {
   return (
     <Section
-      eyebrow="The reality of Tier-2/3 clinics"
-      title="Healthcare in Bihar isn't broken. It just needs the right system."
-      description="Existing software assumes metro-style slot booking. We built DalanHealth for how clinics actually run."
+      eyebrow="The reality of Indian clinics"
+      title={<>Clinics deserve better than <span className="gradient-text">manual queues.</span></>}
+      description="Long waiting times, paper registers, crowded receptions, zero queue visibility — existing software assumes metro-style slot booking. Dalan Health is built for how clinics actually run."
     >
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
         {problems.map((p, i) => (

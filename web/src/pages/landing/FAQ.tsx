@@ -5,13 +5,13 @@ import { Section } from '@/components/ui/Section';
 import { cn } from '@/lib/cn';
 
 const faqs = [
-  { q: 'Why a queue instead of fixed slots?', a: 'Tier-2/3 clinics in India run on walk-ins. Patients show up, take a token, wait. Fixed 15-minute slots assume metro behaviour and break the moment a single consultation runs long. DalanHealth gives you the visibility of slots without breaking the queue-based reality.' },
-  { q: 'How does the wallet deduction work?', a: 'You prepay your wallet. We deduct ₹9 + GST only when a consultation is marked complete. Cancellations, no-shows and tokens generated but not consulted are never charged — you only pay when you earn.' },
-  { q: 'Is there a setup fee, monthly fee, or annual contract?', a: 'No. ₹9 + GST per completed patient is the entire price. No setup fee, no installation charges, no monthly or annual subscription, no AMC, no per-doctor license, no hardware or server purchase, no IT team needed.' },
-  { q: 'Is patient data secure?', a: 'Yes. JWT authentication, role-based access control, encrypted data at rest, audit logs, and strict clinic_id isolation so one clinic can never see another\'s data.' },
-  { q: 'What about offline patients?', a: 'Offline walk-ins are first-class. Your receptionist enters the mobile number, generates a token in 5 seconds, and the patient appears in the same unified queue as online and QR joiners.' },
-  { q: 'Do patients need to install the app?', a: 'Only for online booking and live token tracking. Walk-in patients don\'t need the app — they get a printed/spoken token. QR join offers the smoothest in-clinic experience (scan → install → joined).' },
-  { q: 'How are cashbacks limited?', a: 'Cashback is booking-fee adjustment only. Maximum 50% of any single booking fee can be paid from cashback. No bank withdrawal, no UPI transfer.' },
+  { q: 'How does pricing work?', a: 'Simple pay-per-use: ₹9 + GST is deducted from your prepaid wallet only when a consultation is marked complete. Cancellations, no-shows and unconsulted tokens are never charged — you only pay when you earn. No monthly fee, no annual contract.' },
+  { q: 'Do I need hardware?', a: 'No special hardware. Any phone, tablet or computer with a browser runs the clinic panel. For the waiting room, any ordinary TV with a browser (or a ₹2,000 Android stick) becomes your live queue display.' },
+  { q: 'Can patients book online?', a: 'Yes. Patients book from home through the Dalan Health app or your clinic link, get a token instantly, and track the live queue on their phone — so they walk in just before their number is called.' },
+  { q: 'How does QR booking work?', a: 'Print your clinic\'s unique QR and stick it at reception. Patients scan it with their phone camera, enter their name and mobile number, and join the same unified queue as walk-ins and online bookings — no app download required for a token.' },
+  { q: 'Can I use TV Display?', a: 'Yes — it\'s included free. Open the display link on any TV browser and it shows the live token, up-next list and doctor info, with voice announcements in Hindi, English or both. Patients hear their name called.' },
+  { q: 'Is there any setup fee?', a: 'Zero. No setup fee, no installation charges, no per-doctor license, no AMC, no server purchase, no IT team. You sign up, add your doctors, and start generating tokens the same day.' },
+  { q: 'How do I recharge wallet?', a: 'Recharge anytime from the clinic dashboard via UPI, card or net banking. ₹9 + GST auto-deducts per completed visit, you can see every transaction in the wallet ledger, and we alert you before the balance runs low.' },
 ];
 
 export function FAQ() {

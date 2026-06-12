@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Mail, Globe, MapPin } from 'lucide-react';
+import { Mail, Globe, MapPin, Linkedin, Instagram, Youtube, Github } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 
 const cols = [
@@ -8,17 +8,18 @@ const cols = [
     links: [
       { to: '/#features', label: 'Features' },
       { to: '/#pricing', label: 'Pricing' },
+      { to: '/#how-it-works', label: 'How It Works' },
+      { to: '/#tv-display', label: 'TV Display' },
       { to: '/demo', label: 'Live Demo' },
-      { to: '/signup', label: 'Get Started' },
     ],
   },
   {
     title: 'Company',
     links: [
-      { to: '/about', label: 'About' },
-      { to: '/contact', label: 'Contact' },
-      { to: '/careers', label: 'Careers' },
-      { to: '/blog', label: 'Blog' },
+      { to: '/#faq', label: 'FAQ' },
+      { to: '/signup', label: 'Get Started' },
+      { to: 'mailto:info@dalanhealth.com', label: 'Contact', external: true },
+      { to: 'https://dalanhealth.com', label: 'Website', external: true },
     ],
   },
   {
@@ -31,19 +32,41 @@ const cols = [
   },
 ];
 
+const socials = [
+  { href: 'https://linkedin.com/company/dalanhealth', label: 'LinkedIn', Icon: Linkedin },
+  { href: 'https://instagram.com/dalanhealth', label: 'Instagram', Icon: Instagram },
+  { href: 'https://youtube.com/@dalanhealth', label: 'YouTube', Icon: Youtube },
+  { href: 'https://github.com/dalanhealth', label: 'GitHub', Icon: Github },
+];
+
 export function PublicFooter() {
   return (
-    <footer className="border-t hairline bg-white/40 dark:bg-ink-950/40">
+    <footer id="contact" className="border-t hairline bg-white/40 dark:bg-ink-950/40 scroll-mt-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 grid gap-12 md:grid-cols-5">
         <div className="md:col-span-2">
           <Logo size="lg" asLink={false} />
-          <p className="mt-4 max-w-sm text-sm text-muted">
-            Smarter clinic. Faster queue. Better patient experience. DalanHealth is a hybrid clinic management ecosystem built for Bihar-first healthcare workflows.
+          <p className="mt-3 text-sm font-semibold gradient-text">Better Health</p>
+          <p className="mt-3 max-w-sm text-sm text-muted">
+            Smart Queue &amp; Digital OPD platform. Reduce waiting time, improve patient experience, and modernize your clinic — pay just ₹9 + GST per completed patient.
           </p>
           <div className="mt-6 space-y-2 text-sm text-muted">
-            <div className="flex items-center gap-2"><Mail size={14} /> info@dalansoft.com</div>
-            <div className="flex items-center gap-2"><Globe size={14} /> dalansoft.com</div>
+            <a href="mailto:info@dalanhealth.com" className="flex items-center gap-2 hover:text-brand-600 dark:hover:text-brand-300"><Mail size={14} /> info@dalanhealth.com</a>
+            <a href="https://dalanhealth.com" className="flex items-center gap-2 hover:text-brand-600 dark:hover:text-brand-300"><Globe size={14} /> dalanhealth.com</a>
             <div className="flex items-center gap-2"><MapPin size={14} /> Patna, Bihar — India</div>
+          </div>
+          <div className="mt-6 flex items-center gap-3">
+            {socials.map(({ href, label, Icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={label}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border hairline text-ink-600 dark:text-ink-300 hover:text-brand-600 dark:hover:text-brand-300 hover:border-brand-500/40 hover:shadow-glow transition-all"
+              >
+                <Icon size={16} />
+              </a>
+            ))}
           </div>
         </div>
         {cols.map((c) => (
@@ -52,7 +75,11 @@ export function PublicFooter() {
             <ul className="mt-4 space-y-2">
               {c.links.map((l) => (
                 <li key={l.to}>
-                  <Link to={l.to} className="text-sm text-ink-600 dark:text-ink-300 hover:text-brand-600 dark:hover:text-brand-300">{l.label}</Link>
+                  {'external' in l && l.external ? (
+                    <a href={l.to} target="_blank" rel="noreferrer" className="text-sm text-ink-600 dark:text-ink-300 hover:text-brand-600 dark:hover:text-brand-300">{l.label}</a>
+                  ) : (
+                    <Link to={l.to} className="text-sm text-ink-600 dark:text-ink-300 hover:text-brand-600 dark:hover:text-brand-300">{l.label}</Link>
+                  )}
                 </li>
               ))}
             </ul>

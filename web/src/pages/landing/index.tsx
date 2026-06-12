@@ -3,10 +3,13 @@ import { useLocation } from 'react-router-dom';
 import { Hero } from './Hero';
 import { ProblemSolution } from './ProblemSolution';
 import { Features } from './Features';
-import { DemoSection } from './DemoSection';
-import { Showcase } from './Showcase';
+import { LiveQueueDemo } from './LiveQueueDemo';
+import { TvDisplaySection } from './TvDisplaySection';
+import { HowItWorks } from './HowItWorks';
 import { Pricing } from './Pricing';
 import { Subscribe } from './Subscribe';
+import { Testimonials } from './Testimonials';
+import { Stats } from './Stats';
 import { FAQ } from './FAQ';
 import { CTA } from './CTA';
 
@@ -24,10 +27,13 @@ export function LandingPage() {
       <Hero />
       <ProblemSolution />
       <Features />
-      <DemoSection />
-      <Showcase />
+      <LiveQueueDemo />
+      <TvDisplaySection />
+      <HowItWorks />
       <Pricing />
       <Subscribe />
+      <Testimonials />
+      <Stats />
       <FAQ />
       <CTA />
     </>
