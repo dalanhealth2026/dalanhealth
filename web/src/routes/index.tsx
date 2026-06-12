@@ -1,4 +1,5 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { ScrollToTop } from './ScrollToTop';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { LandingPage } from '@/pages/landing';
@@ -54,7 +55,20 @@ import { BillingScreen } from '@/pages/billing/BillingScreen';
 import { PrescriptionScreen } from '@/pages/prescription/PrescriptionScreen';
 import { TvDisplay } from '@/pages/display/TvDisplay';
 
+/** Root shell: resets window scroll on every route change app-wide. */
+function RootLayout() {
+  return (
+    <>
+      <ScrollToTop />
+      <Outlet />
+    </>
+  );
+}
+
 export const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
   {
     element: <PublicLayout />,
     children: [
@@ -142,4 +156,6 @@ export const router = createBrowserRouter([
 
   { path: '/dashboard', element: <Navigate to="/clinic" replace /> },
   { path: '*', element: <NotFound /> },
+    ],
+  },
 ]);

@@ -19,7 +19,12 @@ export function LandingPage() {
     if (!hash) return;
     const id = hash.replace('#', '');
     const el = document.getElementById(id);
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Drop the hash from the URL once used — otherwise every refresh
+      // replays the auto-scroll to this section.
+      window.history.replaceState(null, '', window.location.pathname);
+    }
   }, [hash]);
 
   return (

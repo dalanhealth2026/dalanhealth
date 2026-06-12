@@ -1,5 +1,5 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronsDownUp, ChevronsUpDown, LogOut, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Logo, DalanMark } from '@/components/ui/Logo';
@@ -65,6 +65,14 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
   );
   const { user, isDemo, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  // The content pane scrolls itself (not the window), so reset it on every
+  // route change — otherwise the next page opens mid-scroll.
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+  }, [pathname]);
 
   const onLogout = () => {
     logout();
@@ -354,7 +362,7 @@ export function DashboardShell({ nav, children, title, subtitle, topRight }: Pro
         {/* Content area scrolls itself instead of the whole page, so the
             sidebar + header stay fixed and tightly-fitting pages (like the
             clinic dashboard) can render fully without a page scrollbar. */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div ref={contentRef} className="flex-1 min-h-0 overflow-y-auto">
           <div className="h-full p-4 sm:p-6 max-w-[1600px] w-full mx-auto">{children}</div>
         </div>
       </div>
