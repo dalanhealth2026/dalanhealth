@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, PlayCircle, Sparkles, Check, Wallet, IndianRupee, BellRing, Users } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, PlayCircle, Sparkles, Check, BellRing, Link2, MonitorPlay, UserPlus, Volume2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -49,10 +49,10 @@ export function Hero() {
           {/* Staggered headline */}
           <h1 className="mt-6 text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight leading-[1.05] text-ink-900 dark:text-ink-50">
             <motion.span initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="block">
-              Eliminate Waiting Lines.
+              Goodbye, Waiting Lines.
             </motion.span>
             <motion.span initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="block gradient-text">
-              Modernize Your Clinic.
+              Hello, Smart Clinic.
             </motion.span>
           </h1>
 
@@ -60,8 +60,8 @@ export function Hero() {
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}
             className="mt-6 max-w-xl text-base sm:text-lg text-muted"
           >
-            Transform your clinic with Smart Queue Management, Digital OPD, QR Token Booking,
-            and Real-Time Patient Tracking.
+            One token system for walk-ins, QR scans and online bookings — a live queue on every
+            phone, at reception, and on a waiting-room TV that calls patients by name.
           </motion.p>
 
           {/* Pricing highlight */}
@@ -102,25 +102,172 @@ export function Hero() {
           </motion.div>
         </div>
 
-        <HeroVisual />
+        <ProductMovie />
       </div>
     </section>
   );
 }
 
-/** Animated doctor-dashboard mockup with mouse parallax + floating cards. */
-function HeroVisual() {
+/* ─── Self-playing product movie ─────────────────────────────────────────────
+   A screen-recording-style loop in a browser frame: token booked → queue
+   moves → TV calls the patient → patient tracks live on the phone.
+   Mouse parallax keeps the premium 3D feel. */
+
+const SCENES = [
+  { icon: UserPlus, label: 'Reception books a token in 5 seconds' },
+  { icon: BellRing, label: 'The queue moves on its own' },
+  { icon: MonitorPlay, label: 'The TV calls the patient by name' },
+  { icon: Link2, label: 'The patient tracks it live — no app needed' },
+];
+
+function Scene({ scene }: { scene: number }) {
+  switch (scene) {
+    case 0: // Reception: add patient → token
+      return (
+        <div className="h-full flex flex-col justify-center px-6">
+          <div className="text-[10px] uppercase tracking-wider text-muted">Reception · Add patient</div>
+          <div className="mt-3 space-y-2">
+            <div className="rounded-xl border hairline bg-white/70 dark:bg-ink-900/60 px-3 py-2.5 text-sm text-ink-800 dark:text-ink-100">Ramesh Jha</div>
+            <div className="rounded-xl border hairline bg-white/70 dark:bg-ink-900/60 px-3 py-2.5 text-sm text-ink-800 dark:text-ink-100">+91 98765 43210</div>
+          </div>
+          <motion.div
+            initial={{ scale: 1 }}
+            animate={{ scale: [1, 0.95, 1] }}
+            transition={{ delay: 0.8, duration: 0.4 }}
+            className="mt-3 rounded-xl bg-gradient-to-br from-brand-600 to-brand-500 text-white text-center text-sm font-semibold py-2.5 shadow-glow"
+          >
+            Generate Token
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.6, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ delay: 1.3, type: 'spring', stiffness: 260, damping: 18 }}
+            className="mt-3 self-center inline-flex items-center gap-2 rounded-full bg-token/15 text-token px-4 py-1.5 text-sm font-extrabold"
+          >
+            <Check size={14} /> Token #23 created
+          </motion.div>
+        </div>
+      );
+    case 1: // Live queue
+      return (
+        <div className="h-full flex flex-col justify-center px-6">
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] uppercase tracking-wider text-muted">Live Queue · Sharma ENT Clinic</div>
+            <Badge tone="success" pulse size="sm">Live</Badge>
+          </div>
+          <div className="mt-3 rounded-xl border border-token/30 bg-token/10 px-4 py-2.5 flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-wider text-token font-bold">Now serving</span>
+            <span className="text-2xl font-extrabold font-brand text-token">#21</span>
+          </div>
+          <div className="mt-2 space-y-1.5">
+            {[
+              { t: 22, n: 'Pooja Sharma', s: 'QR' },
+              { t: 23, n: 'Ramesh Jha', s: 'OFFLINE' },
+              { t: 24, n: 'Neha Singh', s: 'ONLINE' },
+            ].map((r, i) => (
+              <motion.div
+                key={r.t}
+                initial={{ opacity: 0, x: 18 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.18 }}
+                className="flex items-center gap-3 rounded-lg border hairline bg-white/60 dark:bg-ink-900/50 px-3 py-2"
+              >
+                <span className="w-9 text-center text-sm font-extrabold tabular-nums text-ink-900 dark:text-ink-50">#{r.t}</span>
+                <span className="flex-1 text-xs font-medium text-ink-800 dark:text-ink-100 truncate">{r.n}</span>
+                <span className="text-[9px] font-bold text-muted">{r.s}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      );
+    case 2: // TV announcement
+      return (
+        <div className="h-full flex flex-col items-center justify-center px-6">
+          <div className="w-full max-w-[260px] rounded-xl bg-navy-950 p-4 text-white shadow-2xl">
+            <div className="flex items-center justify-between text-[8px] text-white/60">
+              <span>Sharma ENT Clinic</span>
+              <span className="inline-flex items-center gap-1"><Volume2 size={8} /> ON</span>
+            </div>
+            <div className="mt-2 text-center">
+              <div className="text-[9px] uppercase tracking-[0.3em] text-token">Now serving</div>
+              <motion.div
+                animate={{ scale: [1, 1.06, 1] }}
+                transition={{ duration: 1.6, repeat: Infinity }}
+                className="text-5xl font-extrabold text-token"
+              >
+                #23
+              </motion.div>
+              <div className="text-xs font-semibold mt-1">Ramesh Jha</div>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <motion.span
+                key={i}
+                animate={{ scaleY: [0.4, 1.5, 0.4] }}
+                transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
+                className="inline-block h-4 w-1 rounded-full bg-token origin-center"
+              />
+            ))}
+            <span className="ml-2 text-[11px] font-semibold text-ink-800 dark:text-ink-100">हिन्दी • English • भोजपुरी</span>
+          </div>
+        </div>
+      );
+    default: // Patient phone
+      return (
+        <div className="h-full flex flex-col items-center justify-center px-6">
+          <div className="w-full max-w-[250px] rounded-[20px] border-[5px] border-ink-900 dark:border-black bg-ink-50 dark:bg-navy-950 overflow-hidden shadow-2xl">
+            <div className="bg-white/70 dark:bg-ink-900/70 px-3 py-2 border-b hairline text-[10px] font-semibold text-ink-900 dark:text-ink-50">Dalan Health</div>
+            <div className="p-3 space-y-2">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="rounded-xl rounded-tl-sm border border-token/40 bg-token/10 px-3 py-2"
+              >
+                <div className="text-[10px] font-bold text-ink-900 dark:text-ink-50">Track your token 🔴</div>
+                <div className="mt-0.5 text-[10px] text-brand-600 dark:text-brand-300">
+                  <Link2 size={9} className="inline mr-0.5 -mt-0.5" />dalanhealth.com/t/x7k2
+                </div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.9 }}
+                className="rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 p-3 text-white"
+              >
+                <div className="text-[9px] uppercase tracking-wider opacity-90">Your token</div>
+                <div className="text-2xl font-bold">#23</div>
+                <div className="text-[10px] opacity-90">Now serving #21 · ~12 min</div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      );
+  }
+}
+
+function ProductMovie() {
   const ref = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [beat, setBeat] = useState(0);
+  const scene = beat % SCENES.length;
+
+  useEffect(() => {
+    const id = setInterval(() => setBeat((b) => b + 1), 3200);
+    return () => clearInterval(id);
+  }, []);
 
   const onMove = (e: React.MouseEvent) => {
     const r = ref.current?.getBoundingClientRect();
     if (!r) return;
     setTilt({
-      x: ((e.clientX - r.left) / r.width - 0.5) * 14,
-      y: ((e.clientY - r.top) / r.height - 0.5) * -10,
+      x: ((e.clientX - r.left) / r.width - 0.5) * 12,
+      y: ((e.clientY - r.top) / r.height - 0.5) * -8,
     });
   };
+
+  const SceneIcon = SCENES[scene].icon;
 
   return (
     <motion.div
@@ -130,109 +277,74 @@ function HeroVisual() {
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, delay: 0.15 }}
-      className="relative h-[540px] hidden sm:block"
+      className="relative hidden sm:block"
       style={{ perspective: 1200 }}
       aria-hidden
     >
       <motion.div
-        animate={{ rotateY: tilt.x, rotateX: tilt.y }}
-        transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-        className="absolute inset-0"
+        animate={{ rotateY: tilt.x, rotateX: tilt.y, y: [0, -8, 0] }}
+        transition={{
+          rotateY: { type: 'spring', stiffness: 120, damping: 18 },
+          rotateX: { type: 'spring', stiffness: 120, damping: 18 },
+          y: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+        }}
         style={{ transformStyle: 'preserve-3d' }}
       >
-        {/* Main doctor dashboard card */}
-        <motion.div
-          animate={{ y: [0, -8, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute left-0 top-6 w-[86%] glass-strong rounded-3xl p-5 shadow-2xl"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-xs uppercase tracking-wider text-muted">Doctor Dashboard</div>
-              <div className="mt-1 text-lg font-semibold text-ink-900 dark:text-ink-50">Sharma ENT Clinic</div>
-            </div>
-            <Badge tone="success" pulse>Queue LIVE</Badge>
-          </div>
-
-          {/* Current token spotlight */}
-          <div className="mt-4 rounded-2xl border hairline bg-gradient-to-br from-token/10 via-transparent to-brand-500/10 p-4 flex items-center justify-between">
-            <div>
-              <div className="text-[10px] uppercase tracking-wider text-muted">Current Token</div>
-              <div className="text-4xl font-extrabold tracking-tight text-token">#12</div>
-            </div>
-            <div className="text-right">
-              <div className="text-[10px] uppercase tracking-wider text-muted">Patients Waiting</div>
-              <div className="text-3xl font-bold text-ink-900 dark:text-ink-50 inline-flex items-center gap-1.5">
-                <Users size={18} className="text-brand-500" /> 8
-              </div>
-            </div>
-          </div>
-
-          {/* Wallet + revenue */}
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div className="rounded-xl border hairline bg-white/60 dark:bg-ink-900/60 p-3">
-              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted"><Wallet size={11} /> Wallet Balance</div>
-              <div className="mt-1 text-xl font-bold text-ink-900 dark:text-ink-50">₹2,340</div>
-            </div>
-            <div className="rounded-xl border hairline bg-white/60 dark:bg-ink-900/60 p-3">
-              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted"><IndianRupee size={11} /> Revenue Today</div>
-              <div className="mt-1 text-xl font-bold text-success-600 dark:text-success-500">₹3,780</div>
-            </div>
-          </div>
-
-          {/* Mini bar chart */}
-          <div className="mt-3 flex items-end gap-1.5 h-14 px-1">
-            {[35, 55, 40, 70, 52, 85, 64, 92, 75, 58, 80, 66].map((h, i) => (
-              <motion.span
-                key={i}
-                initial={{ height: 0 }}
-                animate={{ height: `${h}%` }}
-                transition={{ delay: 0.5 + i * 0.05, type: 'spring', stiffness: 160, damping: 18 }}
-                className="flex-1 rounded-t bg-gradient-to-t from-brand-500/60 to-accent-500/60"
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Floating notification card */}
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-          className="absolute right-0 top-0 w-[240px] glass-strong rounded-2xl p-4 shadow-xl"
-          style={{ transform: 'translateZ(40px)' }}
-        >
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted">
-            <BellRing size={12} className="text-brand-500" /> Token Called
-          </div>
-          <div className="mt-2 flex items-center gap-3">
-            <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl bg-token/15 text-token font-bold">
-              <span className="absolute inset-0 rounded-xl bg-token/25 animate-ping" />
-              <span className="relative">12</span>
+        {/* Browser frame */}
+        <div className="glass-strong rounded-3xl shadow-2xl overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b hairline bg-white/50 dark:bg-ink-900/50">
+            <span className="h-2.5 w-2.5 rounded-full bg-danger-500/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-warning-500/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-success-500/70" />
+            <span className="ml-3 flex-1 rounded-md bg-ink-100/80 dark:bg-ink-800/80 px-3 py-1 text-[10px] text-muted truncate">
+              dalanhealth.com — your clinic, live
             </span>
-            <div>
-              <div className="text-sm font-semibold text-ink-900 dark:text-ink-50">Raj Verma</div>
-              <div className="text-[11px] text-muted">Please proceed to room 2</div>
+            <Badge tone="success" pulse size="sm">LIVE</Badge>
+          </div>
+
+          {/* Stage */}
+          <div className="relative h-[330px] bg-gradient-to-br from-brand-500/5 via-transparent to-token/5">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={scene}
+                initial={{ opacity: 0, x: 36 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -36 }}
+                transition={{ duration: 0.35 }}
+                className="absolute inset-0"
+              >
+                <Scene scene={scene} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Caption + progress */}
+          <div className="px-5 py-3.5 border-t hairline bg-white/50 dark:bg-ink-900/50">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={scene}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
+                className="flex items-center gap-2 text-sm font-semibold text-ink-900 dark:text-ink-50"
+              >
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500/15 text-brand-600 dark:text-brand-300">
+                  <SceneIcon size={14} />
+                </span>
+                {SCENES[scene].label}
+              </motion.div>
+            </AnimatePresence>
+            <div className="mt-2.5 flex items-center gap-1.5">
+              {SCENES.map((_, i) => (
+                <span key={i} className={`h-1 rounded-full transition-all duration-500 ${i === scene ? 'w-8 bg-brand-500' : 'w-3 bg-ink-200 dark:bg-ink-700'}`} />
+              ))}
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Floating patient-app card */}
-        <motion.div
-          animate={{ y: [0, -6, 0], rotate: [-1.5, 1.5, -1.5] }}
-          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute right-4 bottom-4 w-[250px] glass-strong rounded-[24px] p-4 shadow-2xl"
-          style={{ transform: 'translateZ(60px)' }}
-        >
-          <div className="rounded-2xl bg-gradient-to-br from-brand-500 to-accent-500 p-4 text-white">
-            <div className="text-[10px] uppercase tracking-wider opacity-90">Your Token</div>
-            <div className="mt-1 text-3xl font-bold">#18</div>
-            <div className="mt-2 text-[11px] opacity-90">Now serving <span className="font-semibold">#12</span> · ~18 min</div>
-          </div>
-          <div className="mt-3 flex items-center justify-between text-[11px] text-muted px-1">
-            <span>Patients ahead</span>
-            <span className="font-bold text-ink-900 dark:text-ink-50">6</span>
-          </div>
-        </motion.div>
+        {/* Glow under the frame */}
+        <div aria-hidden className="pointer-events-none absolute -inset-6 -z-10 bg-gradient-to-b from-brand-500/15 via-accent-500/10 to-token/15 blur-2xl rounded-[40px]" />
       </motion.div>
     </motion.div>
   );

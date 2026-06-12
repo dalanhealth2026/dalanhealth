@@ -39,7 +39,9 @@ export function PublicTopBar() {
             : 'bg-white/40 dark:bg-ink-950/40 backdrop-blur-md border-transparent',
         )}
       />
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
+      {/* Wider than the page content (max-w-screen-2xl) so all 8 menu items
+          fit on a single line on desktop instead of wrapping. */}
+      <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 h-16 flex items-center justify-between gap-3 sm:gap-4">
         <Logo />
         <nav className="hidden xl:flex items-center" aria-label="Main">
           {links.map((l) => (
@@ -48,7 +50,7 @@ export function PublicTopBar() {
               to={l.to}
               className={({ isActive }) =>
                 cn(
-                  'nav-underline px-2.5 2xl:px-3 py-2 text-[13px] 2xl:text-sm font-medium transition-colors',
+                  'nav-underline whitespace-nowrap px-2.5 2xl:px-3 py-2 text-[13px] 2xl:text-sm font-medium transition-colors',
                   isActive
                     ? 'text-ink-900 dark:text-ink-50'
                     : 'text-ink-600 hover:text-ink-900 dark:text-ink-300 dark:hover:text-ink-50',
