@@ -1,18 +1,16 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Hero } from './Hero';
-import { ProblemSolution } from './ProblemSolution';
-import { Features } from './Features';
-import { LiveQueueDemo } from './LiveQueueDemo';
-import { TvDisplaySection } from './TvDisplaySection';
-import { HowItWorks } from './HowItWorks';
-import { Pricing } from './Pricing';
-import { Subscribe } from './Subscribe';
-import { Testimonials } from './Testimonials';
+import { TokenMergeShowcase, CompounderShowcase, PatientJourneyShowcase } from './WorkflowShowcase';
+import { PricingTeaser } from './PricingTeaser';
 import { Stats } from './Stats';
-import { FAQ } from './FAQ';
+import { Testimonials } from './Testimonials';
 import { CTA } from './CTA';
 
+/**
+ * Slim homepage: the animated product story. Deep detail lives on the
+ * dedicated pages (/features, /pricing, /how-it-works, /tv-display, /faq).
+ */
 export function LandingPage() {
   const { hash } = useLocation();
   useEffect(() => {
@@ -30,16 +28,12 @@ export function LandingPage() {
   return (
     <>
       <Hero />
-      <ProblemSolution />
-      <Features />
-      <LiveQueueDemo />
-      <TvDisplaySection />
-      <HowItWorks />
-      <Pricing />
-      <Subscribe />
-      <Testimonials />
+      <TokenMergeShowcase />
+      <CompounderShowcase />
+      <PatientJourneyShowcase />
+      <PricingTeaser />
       <Stats />
-      <FAQ />
+      <Testimonials />
       <CTA />
     </>
   );

@@ -88,30 +88,30 @@ export function LiveQueueDemo() {
                 <div className="text-[11px] uppercase tracking-[0.3em] text-brand-600 dark:text-brand-300 font-semibold">Up Next</div>
                 <Badge tone="success" pulse size="sm">Live</Badge>
               </div>
+              {/* Plain keyed render (no exit animations): rows leave the DOM
+                  immediately when the queue advances, so the loop can never
+                  accumulate stale rows. */}
               <div className="mt-3 space-y-2">
-                <AnimatePresence initial={false}>
-                  {[1, 2, 3].map((off) => (
-                    <motion.div
-                      key={token(off)}
-                      layout
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-                      className={`flex items-center gap-3 rounded-xl border p-3 ${
-                        off === 1
-                          ? 'border-brand-500/40 bg-brand-500/10'
-                          : 'hairline bg-white/50 dark:bg-ink-900/40'
-                      }`}
-                    >
-                      <span className={`w-12 text-center text-xl font-extrabold tabular-nums ${off === 1 ? 'text-brand-600 dark:text-brand-300' : 'text-ink-500 dark:text-ink-400'}`}>
-                        #{token(off)}
-                      </span>
-                      <span className="flex-1 text-sm font-medium text-ink-800 dark:text-ink-100 truncate">{person(off).name}</span>
-                      <SourceBadge source={person(off).source} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                {[1, 2, 3].map((off) => (
+                  <motion.div
+                    key={token(off)}
+                    layout
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+                    className={`flex items-center gap-3 rounded-xl border p-3 ${
+                      off === 1
+                        ? 'border-brand-500/40 bg-brand-500/10'
+                        : 'hairline bg-white/50 dark:bg-ink-900/40'
+                    }`}
+                  >
+                    <span className={`w-12 text-center text-xl font-extrabold tabular-nums ${off === 1 ? 'text-brand-600 dark:text-brand-300' : 'text-ink-500 dark:text-ink-400'}`}>
+                      #{token(off)}
+                    </span>
+                    <span className="flex-1 text-sm font-medium text-ink-800 dark:text-ink-100 truncate">{person(off).name}</span>
+                    <SourceBadge source={person(off).source} />
+                  </motion.div>
+                ))}
               </div>
 
               {/* Wait stats */}

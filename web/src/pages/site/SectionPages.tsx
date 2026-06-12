@@ -1,4 +1,5 @@
 import { Features } from '@/pages/landing/Features';
+import { ProblemSolution } from '@/pages/landing/ProblemSolution';
 import { Pricing } from '@/pages/landing/Pricing';
 import { Subscribe } from '@/pages/landing/Subscribe';
 import { HowItWorks } from '@/pages/landing/HowItWorks';
@@ -16,6 +17,7 @@ import { CTA } from '@/pages/landing/CTA';
 export function FeaturesPage() {
   return (
     <>
+      <ProblemSolution />
       <Features />
       <CTA />
     </>
