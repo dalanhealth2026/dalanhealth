@@ -29,13 +29,17 @@ export function Logo({ size = 'md', className, asLink = true, variant = 'auto', 
   const dark = variant === 'onDark' || (variant === 'auto' && isDarkTheme);
 
   const inner = (
-    <span className={cn('inline-flex items-center gap-2.5', className)}>
+    <span className={cn('inline-flex min-w-0 max-w-full items-center gap-2.5', className)}>
       <DalanMark size={s.box} />
       {showWordmark && (
+        // min-w-0 + object-contain let the wordmark scale down on narrow
+        // screens (e.g. 360px phones) instead of overlapping the controls
+        // next to it — the image itself is still the untouched brand asset.
         <img
           src={dark ? '/wordmark-dark.png' : '/wordmark.png'}
           alt="Dalan Health — Better Health"
-          style={{ height: s.wordH, width: 'auto', display: 'block' }}
+          style={{ height: s.wordH, width: 'auto' }}
+          className="block min-w-0 max-w-full object-contain object-left"
           draggable={false}
         />
       )}
@@ -43,7 +47,7 @@ export function Logo({ size = 'md', className, asLink = true, variant = 'auto', 
   );
 
   return asLink ? (
-    <Link to="/" className="inline-flex items-center">
+    <Link to="/" className="inline-flex min-w-0 max-w-full items-center">
       {inner}
     </Link>
   ) : (
@@ -65,7 +69,7 @@ export function DalanMark({ size = 34 }: { size?: number }) {
       alt="DalanHealth"
       width={size}
       height={size}
-      style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
+      style={{ width: size, height: size, objectFit: 'contain', display: 'block', flexShrink: 0 }}
       draggable={false}
     />
   );

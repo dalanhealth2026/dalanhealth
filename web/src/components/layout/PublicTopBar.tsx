@@ -37,7 +37,7 @@ export function PublicTopBar() {
             : 'bg-white/40 dark:bg-ink-950/40 backdrop-blur-md border-transparent',
         )}
       />
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
         <Logo />
         <nav className="hidden lg:flex items-center" aria-label="Main">
           {links.map((l) => (
@@ -50,7 +50,7 @@ export function PublicTopBar() {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <ThemeToggle className="hidden sm:flex" />
           <NavLink to="/login" className="hidden xl:inline-flex">
             <Button variant="ghost" size="md">Sign in</Button>
@@ -59,10 +59,10 @@ export function PublicTopBar() {
             <Button size="md" variant="outline">Book Demo</Button>
           </Link>
           <Link to="/signup">
-            <Button size="md" variant="primary">Get Started</Button>
+            <Button size="md" variant="primary" className="h-9 px-3 text-[13px] sm:h-10 sm:px-4 sm:text-sm">Get Started</Button>
           </Link>
           <button
-            className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border hairline"
+            className="lg:hidden inline-flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl border hairline"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
